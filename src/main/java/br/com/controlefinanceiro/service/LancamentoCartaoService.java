@@ -5,7 +5,7 @@ import br.com.controlefinanceiro.model.CartaoCredito;
 import br.com.controlefinanceiro.model.LancamentoCartao;
 import br.com.controlefinanceiro.repository.CartaoCreditoRepository;
 import br.com.controlefinanceiro.repository.LancamentoCartaoRepository;
-import br.com.controlefinanceiro.repository.VinculoRepository;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -18,13 +18,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class LancamentoCartaoService {
     private final LancamentoCartaoRepository lancamentos;
     private final CartaoCreditoRepository cartoes;
-    private final VinculoRepository vinculos;
 
     public LancamentoCartaoService(LancamentoCartaoRepository lancamentos,
-            CartaoCreditoRepository cartoes, VinculoRepository vinculos) {
+            CartaoCreditoRepository cartoes) {
         this.lancamentos = lancamentos;
         this.cartoes = cartoes;
-        this.vinculos = vinculos;
     }
 
     public List<LancamentoCartaoDto> listar(String contaId) {
@@ -89,7 +87,7 @@ public class LancamentoCartaoService {
     private LancamentoCartao toEntity(LancamentoCartaoDto dto) {
         LancamentoCartao lancamento = new LancamentoCartao();
         lancamento.setId(dto.id() == null ? UUID.randomUUID().toString() : dto.id());
-        lancamento.setContaId(dto.contaId());
+        
         lancamento.setCartaoCreditoId(dto.vinculoId());
         lancamento.setTipo(dto.tipo());
         lancamento.setDescricao(dto.descricao());
@@ -97,16 +95,15 @@ public class LancamentoCartaoService {
         lancamento.setValor(dto.valor());
         lancamento.setData(dto.data());
         lancamento.setObservacao(dto.observacao());
-        lancamento.setSaldoApos(dto.saldoApos());
-        lancamento.setTransferenciaId(dto.transferenciaId());
+        
         return lancamento;
     }
 
     private LancamentoCartaoDto toDto(LancamentoCartao lancamento) {
-        return new LancamentoCartaoDto(lancamento.getId(), lancamento.getContaId(),
+        return new LancamentoCartaoDto(lancamento.getId(),
                 lancamento.getCartaoCreditoId(), lancamento.getTipo(), lancamento.getDescricao(),
                 lancamento.getCategoria(), lancamento.getValor(), lancamento.getData(),
-                lancamento.getObservacao(), lancamento.getSaldoApos(), lancamento.getTransferenciaId());
+                lancamento.getObservacao());
     }
 
     private ResponseStatusException naoEncontrado(String nome) {

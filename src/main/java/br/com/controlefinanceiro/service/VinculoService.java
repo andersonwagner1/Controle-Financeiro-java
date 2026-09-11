@@ -20,6 +20,13 @@ public class VinculoService {
         return repository.findAll().stream().map(this::toDto).toList();
     }
 
+    public List<VinculoDto> listarAtivos() {
+        return repository.findAll().stream()
+                .filter(Vinculo::isAtiva)
+                .map(this::toDto)
+                .toList();
+    }
+
     public VinculoDto buscar(String id) {
         return toDto(repository.findById(id).orElseThrow());
     }

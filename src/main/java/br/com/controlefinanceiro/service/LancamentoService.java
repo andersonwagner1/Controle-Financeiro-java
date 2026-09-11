@@ -1,6 +1,7 @@
 package br.com.controlefinanceiro.service;
 
 import br.com.controlefinanceiro.dto.LancamentoDto;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +13,8 @@ public class LancamentoService {
         this.financeiroService = financeiroService;
     }
 
-    public List<LancamentoDto> listar(String contaId) {
-        return financeiroService.listarLancamentos(contaId);
+    public List<LancamentoDto> listar(String contaId, LocalDate dataInicial, LocalDate dataFinal) {
+        return financeiroService.listarLancamentos(contaId, dataInicial, dataFinal);
     }
 
     public LancamentoDto buscar(String id) {

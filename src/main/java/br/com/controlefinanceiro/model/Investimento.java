@@ -12,15 +12,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Entity
-@Table(name = "CF_Lancamento_cartao")
-public class LancamentoCartao {
+@Table(name = "CF_INVESTIMENTO")
+public class Investimento {
     @Id private String id = UUID.randomUUID().toString();
-    private String contaId;
-    private String cartaoCreditoId;
-    private String tipo;
-    private String descricao;
-    private String categoria;
-    private BigDecimal valor;
-    private LocalDate data;
-    private String observacao;
+    private String nome;
+    private boolean ativo;
+
 }

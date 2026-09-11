@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 public class Lancamento {
     @Id private String id = UUID.randomUUID().toString();
     private String contaId;
+    private String investimentoId;
     private String tipo;
     private String descricao;
     private String categoria;

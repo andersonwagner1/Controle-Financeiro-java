@@ -3,6 +3,7 @@ package br.com.controlefinanceiro.controller;
 import br.com.controlefinanceiro.dto.LancamentoDto;
 import br.com.controlefinanceiro.service.LancamentoService;
 import java.util.List;
+import java.time.LocalDate;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,8 +16,10 @@ public class LancamentoController {
     }
 
     @GetMapping
-    public List<LancamentoDto> listar(@RequestParam(required = false) String contaId) {
-        return service.listar(contaId);
+    public List<LancamentoDto> listar(@RequestParam(required = false) String contaId,
+            @RequestParam(required = false) LocalDate dataInicial,
+            @RequestParam(required = false) LocalDate dataFinal) {
+        return service.listar(contaId, dataInicial, dataFinal);
     }
 
     @GetMapping("/{id}")

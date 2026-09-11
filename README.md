@@ -25,7 +25,12 @@ mvn spring-boot:run
 A API fica em `http://localhost:8080/api` e o Swagger em `http://localhost:8080/swagger-ui.html`.
 
 Endpoints principais: `/bancos`, `/contas-base`, `/contas`, `/vinculos`, `/categorias`, `/lancamentos`,
-`/lancamentos-cartao` e `/transferencias`.
+`/lancamentos-cartao`, `/transferencias` e `/investimentos`.
+
+Investimentos usam o mesmo vínculo financeiro das contas para que possam ser selecionados em transferências.
+Use `POST /api/investimentos` com `bancoId`, `contaBaseId`, `saldo`, `dataInicio`, `dataFim`, `rentabilidade`,
+`vencimento` e `ativa`. `GET /api/investimentos` retorna apenas investimentos ativos para a lista do modal de
+transferência; o cadastro completo continua disponível em `/api/vinculos`.
 
 O Angular deve usar `http://localhost:8080/api` como base URL. O CORS para `http://localhost:4200` já está habilitado.
 

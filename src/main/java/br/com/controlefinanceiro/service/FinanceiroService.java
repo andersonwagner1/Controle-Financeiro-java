@@ -4,6 +4,7 @@ import br.com.controlefinanceiro.dto.*;
 import br.com.controlefinanceiro.model.*;
 import br.com.controlefinanceiro.repository.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -17,14 +18,17 @@ public class FinanceiroService {
     private final ContaBaseRepository contasBase;
     private final CategoriaRepository categorias;
     private final VinculoRepository vinculos;
+        private final InvestimentoRepository investimentos;
     private final LancamentoRepository lancamentos;
 
     public FinanceiroService(BancoRepository bancos, ContaBaseRepository contasBase,
-            CategoriaRepository categorias, VinculoRepository vinculos, LancamentoRepository lancamentos) {
+            CategoriaRepository categorias, VinculoRepository vinculos, InvestimentoRepository investimentos,
+            LancamentoRepository lancamentos) {
         this.bancos = bancos;
         this.contasBase = contasBase;
         this.categorias = categorias;
         this.vinculos = vinculos;
+        this.investimentos = investimentos;
         this.lancamentos = lancamentos;
     }
 
@@ -106,9 +110,8 @@ public class FinanceiroService {
                 .findFirst().orElseThrow(() -> naoEncontrado("Conta"));
     }
 
-    public List<LancamentoDto> listarLancamentos(String contaId) {
-        List<Lancamento> resultado = contaId == null ? lancamentos.findAll()
-                : lancamentos.findByContaIdOrderByDataDesc(contaId);
+    public List<LancamentoDto> listarLancamentos(String contaId, LocalDate dataInicial, LocalDate dataFinal) {
+        List<Lancamento> resultado = lancamentos.buscarPorFiltros(contaId, dataInicial, dataFinal);
         return resultado.stream().map(this::toDto).toList();
     }
 
@@ -141,23 +144,22 @@ public class FinanceiroService {
 
     @Transactional
     public TransferenciaDto transferir(TransferenciaDto request) {
-        Vinculo origem = buscarVinculoEntity(request.contaOrigemId());
-        Vinculo destino = buscarVinculoEntity(request.contaDestinoId());
-        if (origem.getId().equals(destino.getId()))
+        BigDecimal saldoOrigem = buscarSaldoTransferencia(request.contaOrigemId());
+        if (request.contaOrigemId().equals(request.contaDestinoId()))
             throw erro("As contas devem ser diferentes");
         if (request.valor() == null || request.valor().signum() <= 0)
             throw erro("O valor deve ser positivo");
-        if (origem.getSaldo().compareTo(request.valor()) < 0)
+        if (saldoOrigem.compareTo(request.valor()) < 0)
             throw erro("Saldo insuficiente");
 
         String transferenciaId = request.id() == null ? UUID.randomUUID().toString() : request.id();
-        lancamentos.save(novoLancamento(origem.getId(), "debito", "Transferência Enviada", request, transferenciaId));
+        lancamentos.save(novoLancamento(request.contaOrigemId(), "debito", "Transferência Enviada", request, transferenciaId));
         lancamentos
-                .save(novoLancamento(destino.getId(), "credito", "Transferência Recebida", request, transferenciaId));
-        ajustarSaldo(origem.getId(), "debito", request.valor());
-        ajustarSaldo(destino.getId(), "credito", request.valor());
-        return new TransferenciaDto(transferenciaId, origem.getId(), destino.getId(), request.valor(), request.data(),
-                request.descricao());
+            .save(novoLancamento(request.contaDestinoId(), "credito", "Transferência Recebida", request, transferenciaId));
+        ajustarSaldo(request.contaOrigemId(), "debito", request.valor());
+        ajustarSaldo(request.contaDestinoId(), "credito", request.valor());
+        return new TransferenciaDto(transferenciaId, request.contaOrigemId(), request.contaDestinoId(), request.valor(), request.data(),
+                request.descricao(), request.investimentoId());
     }
 
     private Lancamento novoLancamento(String contaId, String tipo, String categoria, TransferenciaDto request,
@@ -174,10 +176,23 @@ public class FinanceiroService {
     }
 
     private void ajustarSaldo(String contaId, String tipo, BigDecimal valor) {
-        Vinculo vinculo = buscarVinculoEntity(contaId);
         BigDecimal delta = "credito".equalsIgnoreCase(tipo) ? valor : valor.negate();
-        vinculo.setSaldo(vinculo.getSaldo() == null ? delta : vinculo.getSaldo().add(delta));
-        vinculos.save(vinculo);
+        Vinculo vinculo = vinculos.findById(contaId).orElse(null);
+        if (vinculo != null) {
+            vinculo.setSaldo(vinculo.getSaldo() == null ? delta : vinculo.getSaldo().add(delta));
+            vinculos.save(vinculo);
+            return;
+        }
+        Investimento investimento = buscarInvestimentoEntity(contaId);        
+        investimentos.save(investimento);
+    }
+
+    private BigDecimal buscarSaldoTransferencia(String contaId) {
+        Vinculo vinculo = vinculos.findById(contaId).orElse(null);
+        if (vinculo != null)
+            return vinculo.getSaldo() == null ? BigDecimal.ZERO : vinculo.getSaldo();
+        Investimento investimento = buscarInvestimentoEntity(contaId);
+        return null;
     }
 
     private Banco toEntity(BancoDto dto) {
@@ -255,7 +270,7 @@ public class FinanceiroService {
 
     private LancamentoDto toDto(Lancamento e) {
         return new LancamentoDto(e.getId(), e.getContaId(), e.getTipo(), e.getDescricao(), e.getCategoria(),
-                e.getValor(), e.getData(), e.getObservacao(), e.getSaldoApos(), e.getTransferenciaId());
+                e.getValor(), e.getData(), e.getObservacao(), e.getSaldoApos(), e.getTransferenciaId(), e.getInvestimentoId());
     }
 
     private String id(String id) {
@@ -268,6 +283,10 @@ public class FinanceiroService {
 
     private Vinculo buscarVinculoEntity(String id) {
         return vinculos.findById(id).orElseThrow(() -> naoEncontrado("Vínculo"));
+    }
+
+    private Investimento buscarInvestimentoEntity(String id) {
+        return investimentos.findById(id).orElseThrow(() -> naoEncontrado("Investimento"));
     }
 
     private Lancamento buscarLancamentoEntity(String id) {
