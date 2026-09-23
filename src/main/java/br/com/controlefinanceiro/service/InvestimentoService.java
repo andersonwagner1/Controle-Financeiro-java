@@ -1,7 +1,8 @@
 package br.com.controlefinanceiro.service;
 
 import br.com.controlefinanceiro.dto.InvestimentoDto;
-import br.com.controlefinanceiro.model.Investimento;
+import br.com.controlefinanceiro.model.BasInvestimento;
+
 import br.com.controlefinanceiro.repository.InvestimentoRepository;
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,12 +21,12 @@ public class InvestimentoService {
 
     public List<InvestimentoDto> listar() {
         return repository.findAll().stream()
-                .filter(Investimento::isAtivo)
+               // .filter(Investimento::isAtivo)
                 .map(this::toDto)
                 .toList();
     }
 
-    public InvestimentoDto buscar(String id) {
+    public InvestimentoDto buscar(Long id) {
         return toDto(buscarEntidade(id));
     }
 
@@ -33,27 +34,27 @@ public class InvestimentoService {
         return salvar(dto, null);
     }
 
-    public InvestimentoDto atualizar(String id, InvestimentoDto dto) {
+    public InvestimentoDto atualizar(Long id, InvestimentoDto dto) {
         buscarEntidade(id);
         return salvar(dto, id);
     }
 
 
-    public Investimento buscarEntidade(String id) {
+    public BasInvestimento buscarEntidade(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Investimento não encontrado"));
     }
 
-    private InvestimentoDto salvar(InvestimentoDto dto, String id) {
-        Investimento investimento = new Investimento();
-        investimento.setId(id == null ? (dto.id() == null ? UUID.randomUUID().toString() : dto.id()) : id);
+    private InvestimentoDto salvar(InvestimentoDto dto, Long id) {
+        BasInvestimento investimento = new BasInvestimento();
+        investimento.setId(dto.id());
        
-        investimento.setNome(dto.nome());
-        investimento.setAtivo(dto.ativo() == null || dto.ativo());
+        investimento.setDsInvestimento(dto.nome());
+        investimento.setIcSituacao(dto.ativo());
         return toDto(repository.save(investimento));
     }
 
-    private InvestimentoDto toDto(Investimento investimento) {
-        return new InvestimentoDto(investimento.getId(), investimento.getNome(), investimento.isAtivo());
+    private InvestimentoDto toDto(BasInvestimento investimento) {
+        return new InvestimentoDto(investimento.getId(), investimento.getDsInvestimento(), investimento.getIcSituacao());
     }
 }

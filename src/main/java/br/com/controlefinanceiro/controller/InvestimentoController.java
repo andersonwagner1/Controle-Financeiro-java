@@ -1,7 +1,9 @@
 package br.com.controlefinanceiro.controller;
 
 import br.com.controlefinanceiro.dto.InvestimentoDto;
+import br.com.controlefinanceiro.dto.ContaVinculadaDto;
 import br.com.controlefinanceiro.service.InvestimentoService;
+import br.com.controlefinanceiro.service.BancoContaService;
 import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,9 +11,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/investimentos")
 public class InvestimentoController {
     private final InvestimentoService service;
+    private final BancoContaService vinculoService;
 
-    public InvestimentoController(InvestimentoService service) {
+    public InvestimentoController(InvestimentoService service, BancoContaService vinculoService) {
         this.service = service;
+        this.vinculoService = vinculoService;
     }
 
     @GetMapping
@@ -19,8 +23,14 @@ public class InvestimentoController {
         return service.listar();
     }
 
+    @GetMapping("/contas-vinculadas")
+    public List<ContaVinculadaDto> listarContasVinculadas() {
+        List<ContaVinculadaDto> lista = vinculoService.listarContasVinculadas();
+        return lista;
+    }
+
     @GetMapping("/{id}")
-    public InvestimentoDto buscar(@PathVariable String id) {
+    public InvestimentoDto buscar(@PathVariable Long id) {
         return service.buscar(id);
     }
 
@@ -30,7 +40,7 @@ public class InvestimentoController {
     }
 
     @PutMapping("/{id}")
-    public InvestimentoDto atualizar(@PathVariable String id, @RequestBody InvestimentoDto dto) {
+    public InvestimentoDto atualizar(@PathVariable Long id, @RequestBody InvestimentoDto dto) {
         return service.atualizar(id, dto);
     }
 }

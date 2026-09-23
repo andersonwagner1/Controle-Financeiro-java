@@ -1,23 +1,26 @@
 package br.com.controlefinanceiro.service;
 
 import br.com.controlefinanceiro.dto.LancamentoDto;
-import java.time.LocalDate;
+
+import java.util.Date;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
 public class LancamentoService {
     private final FinanceiroService financeiroService;
+    private final TransferenciaService transferenciaService;
 
-    public LancamentoService(FinanceiroService financeiroService) {
+    public LancamentoService(FinanceiroService financeiroService, TransferenciaService transferenciaService) {
         this.financeiroService = financeiroService;
+        this.transferenciaService = transferenciaService;
     }
 
-    public List<LancamentoDto> listar(String contaId, LocalDate dataInicial, LocalDate dataFinal) {
+    public List<LancamentoDto> listar(Long contaId, Date dataInicial, Date dataFinal) {
         return financeiroService.listarLancamentos(contaId, dataInicial, dataFinal);
     }
 
-    public LancamentoDto buscar(String id) {
+    public LancamentoDto buscar(Long id) {
         return financeiroService.buscarLancamento(id);
     }
 
@@ -25,11 +28,18 @@ public class LancamentoService {
         return financeiroService.criarLancamento(dto);
     }
 
-    public LancamentoDto atualizar(String id, LancamentoDto dto) {
+    public LancamentoDto atualizar(Long id, LancamentoDto dto) {
         return financeiroService.atualizarLancamento(id, dto);
     }
 
-    public void excluir(String id) {
+    public void excluir(Long id) {
         financeiroService.excluirLancamento(id);
+    }
+
+
+
+    public void categorias() {
+
+        
     }
 }

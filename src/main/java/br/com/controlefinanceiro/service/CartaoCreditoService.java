@@ -4,7 +4,7 @@ import br.com.controlefinanceiro.dto.CartaoCreditoDto;
 import br.com.controlefinanceiro.model.CartaoCredito;
 import br.com.controlefinanceiro.repository.CartaoCreditoRepository;
 import br.com.controlefinanceiro.repository.LancamentoCartaoRepository;
-import br.com.controlefinanceiro.repository.VinculoRepository;
+import br.com.controlefinanceiro.repository.BancoContaRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -15,10 +15,11 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class CartaoCreditoService {
     private final CartaoCreditoRepository cartoes;
-    private final VinculoRepository vinculos;
+    private final BancoContaRepository vinculos;
         private final LancamentoCartaoRepository lancamentos;
 
-    public CartaoCreditoService(CartaoCreditoRepository cartoes, VinculoRepository vinculos,
+    public CartaoCreditoService(CartaoCreditoRepository cartoes, 
+        BancoContaRepository vinculos,
             LancamentoCartaoRepository lancamentos) {
         this.cartoes = cartoes;
         this.vinculos = vinculos;
@@ -47,9 +48,9 @@ public class CartaoCreditoService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Vínculo não encontrado");
         }
         CartaoCredito cartao = new CartaoCredito();
-        cartao.setId(id == null ? (dto.id() == null ? UUID.randomUUID().toString() : dto.id()) : id);
+        cartao.setId(id == null ? (dto.id() == null ? UUID.randomUUID().toString() : dto.id().toString()) : id);
         cartao.setNome(dto.nome());
-        cartao.setVinculoId(dto.vinculoId());
+        cartao.setBancoConta( vinculos.findById(dto.vinculoId()).get());
         cartao.setLimite(dto.limite());
         cartao.setDiaFechamento(dto.diaFechamento());
         cartao.setDiaVencimento(dto.diaVencimento());
@@ -66,7 +67,7 @@ public class CartaoCreditoService {
         BigDecimal limiteDisponivel = cartao.getLimite().subtract(utilizado == null ? BigDecimal.ZERO : utilizado);
         return new CartaoCreditoDto(cartao.getId(), 
                 cartao.getNome(), 
-                cartao.getVinculoId(), 
+                cartao.getBancoConta().getId(), 
                 cartao.getLimite(),
                 cartao.getDiaFechamento(), 
                 cartao.getDiaVencimento(), 

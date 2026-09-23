@@ -1,17 +1,17 @@
 package br.com.controlefinanceiro.controller;
 
 import br.com.controlefinanceiro.dto.VinculoDto;
-import br.com.controlefinanceiro.service.VinculoService;
+import br.com.controlefinanceiro.service.BancoContaService;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/vinculos")
-public class VinculoController {
-    private final VinculoService service;
+public class BancoContaController {
+    private final BancoContaService service;
 
-    public VinculoController(VinculoService service) {
+    public BancoContaController(BancoContaService service) {
         this.service = service;
     }
 
@@ -21,7 +21,7 @@ public class VinculoController {
     }
 
     @GetMapping("/{id}")
-    public VinculoDto buscar(@PathVariable String id) {
+    public VinculoDto buscar(@PathVariable Long id) {
         return service.buscar(id);
     }
 
@@ -31,12 +31,12 @@ public class VinculoController {
     }
 
     @PutMapping("/{id}")
-    public VinculoDto atualizar(@PathVariable String id, @RequestBody VinculoDto dto) {
+    public VinculoDto atualizar(@PathVariable Long id, @RequestBody VinculoDto dto) {
         return service.atualizar(id, dto);
     }
 
     @PatchMapping("/{id}/saldo")
-    public VinculoDto atualizarSaldo(@PathVariable String id, @RequestParam BigDecimal saldo) {
+    public VinculoDto atualizarSaldo(@PathVariable Long id, @RequestParam BigDecimal saldo) {
         return service.atualizarSaldo(id, saldo);
     }
 }

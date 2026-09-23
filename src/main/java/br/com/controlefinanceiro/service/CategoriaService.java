@@ -1,56 +1,57 @@
 package br.com.controlefinanceiro.service;
 
-import br.com.controlefinanceiro.dto.CategoriaDto;
-import br.com.controlefinanceiro.model.Categoria;
-import br.com.controlefinanceiro.repository.CategoriaRepository;
+import br.com.controlefinanceiro.dto.TipoMovimentacaoDto;
+import br.com.controlefinanceiro.model.BasTipoMovimentacao;
+import br.com.controlefinanceiro.model.emurador.EnumSimNao;
+
+import br.com.controlefinanceiro.repository.TipoMovimentacaoRepository;
 import java.util.List;
-import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CategoriaService {
-    private final CategoriaRepository repository;
+    private final TipoMovimentacaoRepository repository;
 
-    public CategoriaService(CategoriaRepository repository) {
+    public CategoriaService(TipoMovimentacaoRepository repository) {
         this.repository = repository;
     }
 
-    public List<CategoriaDto> listar() {
+    public List<TipoMovimentacaoDto> listar() {
         return repository.findAll().stream().map(this::toDto).toList();
     }
 
-    public CategoriaDto buscar(String id) {
+    public TipoMovimentacaoDto buscar(Long id) {
         return toDto(repository.findById(id).orElseThrow());
     }
 
-    public CategoriaDto criar(CategoriaDto dto) {
+    public TipoMovimentacaoDto criar(TipoMovimentacaoDto dto) {
         return salvar(dto);
     }
 
-    public CategoriaDto atualizar(String id, CategoriaDto dto) {
-        return salvar(new CategoriaDto(id, dto.nome(), dto.tipo(), dto.ativo()));
+    public TipoMovimentacaoDto atualizar(Long id, TipoMovimentacaoDto dto) {
+        return salvar(new TipoMovimentacaoDto(id, dto.nome(), dto.tipo(), dto.ativo()));
     }
 
-    public CategoriaDto atualizarStatus(String id, String ativo) {
-        Categoria categoria = repository.findById(id).orElseThrow();
-        categoria.setAtivo(ativo);
+    public TipoMovimentacaoDto atualizarStatus(Long id, String ativo) {
+        BasTipoMovimentacao categoria = repository.findById(id).orElseThrow();
+        categoria.setIcSituacao(EnumSimNao.valueOf(ativo));
         return toDto(repository.save(categoria));
     }
 
-    public void excluir(String id) {
+    public void excluir(Long id) {
         repository.deleteById(id);
     }
 
-    private CategoriaDto salvar(CategoriaDto dto) {
-        Categoria categoria = new Categoria();
-        categoria.setId(dto.id() == null ? UUID.randomUUID().toString() : dto.id());
-        categoria.setNome(dto.nome());
-        categoria.setTipo(dto.tipo());
-        categoria.setAtivo(dto.ativo() == null ? "A" : dto.ativo());
+    private TipoMovimentacaoDto salvar(TipoMovimentacaoDto dto) {
+        BasTipoMovimentacao categoria = new BasTipoMovimentacao();
+        categoria.setId(dto.id());
+        categoria.setDsTipoMovimentacao(dto.nome());
+        categoria.setIcTipoMovimentacao(dto.tipo());
+        categoria.setIcSituacao(dto.ativo());
         return toDto(repository.save(categoria));
     }
 
-    private CategoriaDto toDto(Categoria categoria) {
-        return new CategoriaDto(categoria.getId(), categoria.getNome(), categoria.getTipo(), categoria.getAtivo());
+    private TipoMovimentacaoDto toDto(BasTipoMovimentacao categoria) {
+        return new TipoMovimentacaoDto(categoria.getId(), categoria.getDsTipoMovimentacao(), categoria.getIcTipoMovimentacao(), categoria.getIcSituacao());
     }
 }

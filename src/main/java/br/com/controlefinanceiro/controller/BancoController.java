@@ -20,7 +20,7 @@ public class BancoController {
     }
 
     @GetMapping("/{id}")
-    public BancoDto buscar(@PathVariable String id) {
+    public BancoDto buscar(@PathVariable Long id) {
         return service.buscar(id);
     }
 
@@ -30,7 +30,7 @@ public class BancoController {
     }
 
     @PutMapping("/{id}")
-    public BancoDto atualizar(@PathVariable String id, @RequestBody BancoDto dto) {
+    public BancoDto atualizar(@PathVariable Long id, @RequestBody BancoDto dto) {
         return service.atualizar(id, dto);
     }
 }

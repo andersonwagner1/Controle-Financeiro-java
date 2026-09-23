@@ -3,6 +3,8 @@ package br.com.controlefinanceiro.controller;
 import br.com.controlefinanceiro.dto.DashboardDto;
 import br.com.controlefinanceiro.service.FinanceiroService;
 import java.time.LocalDate;
+import java.util.Date;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,8 +20,8 @@ public class DashboardController {
     }
 
     @GetMapping
-    public DashboardDto buscarDados(@RequestParam(required = false) LocalDate dataInicial,
-            @RequestParam(required = false) LocalDate dataFinal) {
+    public DashboardDto buscarDados(@RequestParam(required = false) Date dataInicial,
+            @RequestParam(required = false) Date dataFinal) {
         return new DashboardDto(
                 service.listarBancos(),
                 service.listarContas(),

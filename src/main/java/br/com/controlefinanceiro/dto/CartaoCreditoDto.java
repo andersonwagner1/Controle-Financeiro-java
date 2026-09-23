@@ -11,7 +11,7 @@ import java.time.LocalDate;
 public record CartaoCreditoDto(
                 String id,
                 @NotBlank String nome,
-                @NotBlank String vinculoId,
+                @NotBlank Long vinculoId,
                 @NotNull @DecimalMin(value = "0.01") BigDecimal limite,
                 @NotNull @Min(1) @Max(31) Integer diaFechamento,
                 @NotNull @Min(1) @Max(31) Integer diaVencimento,
@@ -20,4 +20,5 @@ public record CartaoCreditoDto(
                 LocalDate dataAbertura
 
             ) {
+
 }

@@ -1,7 +1,8 @@
 package br.com.controlefinanceiro.service;
 
 import br.com.controlefinanceiro.dto.ContaBaseDto;
-import br.com.controlefinanceiro.model.ContaBase;
+import br.com.controlefinanceiro.model.BasConta;
+
 import br.com.controlefinanceiro.repository.ContaBaseRepository;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +20,7 @@ public class ContaBaseService {
         return repository.findAll().stream().map(this::toDto).toList();
     }
 
-    public ContaBaseDto buscar(String id) {
+    public ContaBaseDto buscar(Long id) {
         return toDto(repository.findById(id).orElseThrow());
     }
 
@@ -27,19 +28,19 @@ public class ContaBaseService {
         return salvar(dto);
     }
 
-    public ContaBaseDto atualizar(String id, ContaBaseDto dto) {
+    public ContaBaseDto atualizar(Long id, ContaBaseDto dto) {
         return salvar(new ContaBaseDto(id, dto.descricao(), dto.tipo()));
     }
 
     private ContaBaseDto salvar(ContaBaseDto dto) {
-        ContaBase conta = new ContaBase();
-        conta.setId(dto.id() == null ? UUID.randomUUID().toString() : dto.id());
-        conta.setDescricao(dto.descricao());
-        conta.setTipo(dto.tipo());
+        BasConta conta = new BasConta();
+        conta.setId(dto.id());
+        conta.setDsConta(dto.descricao());
+        conta.setIcTipo(dto.tipo());
         return toDto(repository.save(conta));
     }
 
-    private ContaBaseDto toDto(ContaBase conta) {
-        return new ContaBaseDto(conta.getId(), conta.getDescricao(), conta.getTipo());
+    private ContaBaseDto toDto(BasConta conta) {
+        return new ContaBaseDto(conta.getId(), conta.getDsConta(), conta.getIcTipo());
     }
 }

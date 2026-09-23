@@ -1,7 +1,9 @@
 package br.com.controlefinanceiro.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,7 +19,9 @@ public class CartaoCredito {
     @Id private String id = UUID.randomUUID().toString();
     private String nome;
     /** Identificador do vínculo (banco/conta) ao qual o cartão pertence. */
-    private String vinculoId;
+    @ManyToOne
+    @JoinColumn(name = "BANCO_CONTA_ID")
+    private BasBancoConta bancoConta;
     private BigDecimal limite;
     private Integer diaFechamento;
     private Integer diaVencimento;

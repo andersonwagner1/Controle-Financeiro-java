@@ -20,7 +20,7 @@ public class ContaBaseController {
     }
 
     @GetMapping("/{id}")
-    public ContaBaseDto buscar(@PathVariable String id) {
+    public ContaBaseDto buscar(@PathVariable Long id) {
         return service.buscar(id);
     }
 
@@ -30,7 +30,7 @@ public class ContaBaseController {
     }
 
     @PutMapping("/{id}")
-    public ContaBaseDto atualizar(@PathVariable String id, @RequestBody ContaBaseDto dto) {
+    public ContaBaseDto atualizar(@PathVariable Long id, @RequestBody ContaBaseDto dto) {
         return service.atualizar(id, dto);
     }
 }
