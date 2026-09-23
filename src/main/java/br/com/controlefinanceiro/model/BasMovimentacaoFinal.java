@@ -43,5 +43,14 @@ public class BasMovimentacaoFinal {
 	
 	@Enumerated(EnumType.STRING)
 	EnumSimNao icFechado = EnumSimNao.NAO;
+
+
+	public BasMovimentacaoFinal(){
+		this.icFechado = EnumSimNao.SIM;
+		this.vlSaldoFinal = BigDecimal.ZERO;
+		this.vlTotalCredito =BigDecimal.ZERO;
+		this.vlTotalDebito = BigDecimal.ZERO;
+		this.vlSaldoInicial =BigDecimal.ZERO;
+	}
 	
 }

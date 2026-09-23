@@ -3,7 +3,10 @@ package br.com.controlefinanceiro.model;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import br.com.controlefinanceiro.model.emurador.EnumSimNao;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,8 +34,11 @@ public class BasMovimentacao {
 	BigDecimal vlDebito;
 	BigDecimal vlSaldo;
 	String dsObservacao;
-	String icCalcular;
-	String icSituacao;
+	@Enumerated (EnumType.STRING)
+	EnumSimNao icCalcular;
+
+	@Enumerated (EnumType.STRING)
+	EnumSimNao icSituacao;
 
 	@ManyToOne
     @JoinColumn(name = "BANCO_CONTA_ID")

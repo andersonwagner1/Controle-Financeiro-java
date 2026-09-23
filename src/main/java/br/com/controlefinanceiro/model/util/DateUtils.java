@@ -88,14 +88,49 @@ public class DateUtils {
      * @param data Objeto LocalDate
      * @return String[] onde [0] = mês (MM) e [1] = ano (yyyy)
      */
-    public static Integer[] getMesEAno(LocalDate data) {
+    public static Integer[] getMesEAno(Date data) {
         if (data == null) return new Integer[0];
         
-        Integer mes = Integer.parseInt(String.format("%02d", data.getMonthValue()));
-        Integer ano = Integer.parseInt(String.valueOf(data.getYear()));
+        LocalDate localDate = toLocalDate(data);
+
+        Integer mes = Integer.parseInt(String.format("%02d", localDate.getMonthValue()));
+        Integer ano = Integer.parseInt(String.valueOf(localDate.getYear()));
         
         return new Integer[]{mes, ano};
     }
+
+
+        public static Integer[] getDiaMesAno(String data) {
+             Date dt = stringToDate(data);
+             return getDiaMesEAno(dt);
+        }
+
+
+        public static Integer[] getDiaMesEAno(Date data) {
+        if (data == null) return new Integer[0];
+        
+        LocalDate localDate = toLocalDate(data);
+
+        Integer dia = Integer.parseInt(String.format("%02d", localDate.getDayOfMonth()));
+        Integer mes = Integer.parseInt(String.format("%02d", localDate.getMonthValue()));
+        Integer ano = Integer.parseInt(String.valueOf(localDate.getYear()));
+        
+        return new Integer[]{dia, mes, ano};
+    }
+
+    public static Integer[] getMesEAno(LocalDate localDate) {
+        if (localDate == null) return new Integer[0];
+        
+        
+
+        Integer mes = Integer.parseInt(String.format("%02d", localDate.getMonthValue()));
+        Integer ano = Integer.parseInt(String.valueOf(localDate.getYear()));
+        
+        return new Integer[]{mes, ano};
+    }
+
+    
+
 
     /**
      * Converte um LocalDate para java.util.Date usando o fuso horário padrão do sistema.
