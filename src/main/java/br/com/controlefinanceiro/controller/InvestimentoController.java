@@ -29,6 +29,14 @@ public class InvestimentoController {
         return lista;
     }
 
+       @GetMapping("/listar-por-banco/{banco}")
+    public List<InvestimentoDto> listarContasVinculadas(@PathVariable Long banco) {
+        List<InvestimentoDto> lista = service.listarContasVinculadas(banco);
+        return lista;
+    }
+
+   
+
     @GetMapping("/{id}")
     public InvestimentoDto buscar(@PathVariable Long id) {
         return service.buscar(id);

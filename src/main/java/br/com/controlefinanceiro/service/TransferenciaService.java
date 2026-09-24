@@ -11,7 +11,9 @@ public class TransferenciaService {
         this.financeiroService = financeiroService;
     }
 
-    public TransferenciaDto criar(TransferenciaDto dto) {
-        return financeiroService.transferir(dto);
+    public void criar(TransferenciaDto dto) {
+        financeiroService.transferir(dto);  
+        financeiroService.atualizarSaldo(dto.bancoContaId(), dto.data());
+        financeiroService.atualizarSaldo(dto.bancoContaDestinoId(), dto.data());
     }
 }

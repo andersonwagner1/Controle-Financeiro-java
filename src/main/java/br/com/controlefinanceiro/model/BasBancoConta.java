@@ -1,9 +1,6 @@
 package br.com.controlefinanceiro.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 
 import br.com.controlefinanceiro.model.emurador.EnumSimNao;
 import jakarta.persistence.Entity;

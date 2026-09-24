@@ -2,7 +2,6 @@ package br.com.controlefinanceiro.repository;
 
 import br.com.controlefinanceiro.model.BasMovimentacao;
 
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -13,9 +12,17 @@ import org.springframework.data.repository.query.Param;
 public interface LancamentoRepository extends JpaRepository<BasMovimentacao, Long> {
     
         @Query("select l from BasMovimentacao l "
+        + "where l.bancoConta.id = :contaId AND l.competencia.id =:competencia "
+        + "order by l.dtMovimentacao desc")
+        List<BasMovimentacao> findByContaIdOrderByDataDesc(@Param("contaId") Long contaId, @Param("competencia") Long competencia);
+
+
+           @Query("select l from BasMovimentacao l "
         + "where (:contaId is null or l.bancoConta.id = :contaId) "
         + "order by l.dtMovimentacao desc")
         List<BasMovimentacao> findByContaIdOrderByDataDesc(@Param("contaId") Long contaId);
+
+
 @Query("select l from BasMovimentacao l "
      + " WHERE l.bancoConta.id = :contaId "
      + " AND l.dtMovimentacao >= :dataInicial "

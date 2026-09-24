@@ -7,6 +7,7 @@ import br.com.controlefinanceiro.model.emurador.EnumTipoMovimentacao;
 import br.com.controlefinanceiro.model.util.DateUtils;
 import br.com.controlefinanceiro.repository.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -75,7 +76,7 @@ public class FinanceiroService {
         return categoriasRepository.findAll().stream().map(this::toDto).toList();
     }
 
-    public TipoMovimentacaoDto buscarCategoria(Long id) {
+    private TipoMovimentacaoDto buscarCategoria(Long id) {
         return toDto(categoriasRepository.findById(id).orElseThrow(() -> naoEncontrado("Categoria")));
     }
 
@@ -221,54 +222,147 @@ public class FinanceiroService {
     }
 
     @Transactional
-    public TransferenciaDto transferir(TransferenciaDto request) {
-        //BigDecimal saldoOrigem = buscarSaldoTransferencia(request.contaOrigemId());
-        //if (request.contaOrigemId().equals(request.contaDestinoId()))
-        //    throw erro("As contas devem ser diferentes");
-        //if (request.valor() == null || request.valor().signum() <= 0)d
-        //    throw erro("O valor deve ser positivo");
-      //  if (saldoOrigem.compareTo(request.valor()) < 0)
-       //     throw erro("Saldo insuficiente");
+    public void transferir(TransferenciaDto request) {
+      
+        BasMovimentacao movimentacaoOrigem = novoLancamento(
+            request.bancoContaId(), 
+            request.data(), 
+            request.tipoTransferencia(), 
+            request.valor(), 
+            request.investimento(), 
+            true);
 
-        Long transferenciaId = request.id(); 
-        lancamentosRepository.save(novoLancamento(request.contaOrigemId(),EnumTipoMovimentacao.DEBITO, "Transferência Enviada", request, transferenciaId));
-        lancamentosRepository.save(novoLancamento(request.contaDestinoId(), EnumTipoMovimentacao.CREDITO, "Transferência Recebida", request, transferenciaId));
-       // ajustarSaldo(request.contaOrigemId(), EnumTipoMovimentacao.DEBITO, request.valor());
-       // ajustarSaldo(request.contaDestinoId(), EnumTipoMovimentacao.CREDITO, request.valor());
-        return new TransferenciaDto(transferenciaId, request.contaOrigemId(), request.contaDestinoId(), request.valor(), request.data(),
-                request.descricao(), request.investimentoId());
+       movimentacaoOrigem =  lancamentosRepository.save(movimentacaoOrigem);
+
+       BasMovimentacao movimentacaoDestino =  novoLancamento(
+        request.bancoContaDestinoId(), 
+       request.data(), 
+       request.tipoTransferencia(), 
+       request.valor(), 
+       request.investimento(), false);
+
+       movimentacaoDestino.setVinculado(movimentacaoOrigem);
+       movimentacaoDestino = lancamentosRepository.save(movimentacaoDestino);
+       
+       
+       //VINCULAR COM O DESTINO
+        movimentacaoOrigem.setVinculado(movimentacaoDestino);
+        lancamentosRepository.save(movimentacaoOrigem);
+
+        
+
     }
 
-    /**
-     * 
-     */
-    private BasMovimentacao novoLancamento(Long contaId, EnumTipoMovimentacao tipo, String categoria, TransferenciaDto request, Long transferenciaId) {
+
+    private BasMovimentacao novoLancamento(Long bancoContaId, LocalDate data, String tipoMovimentacao, BigDecimal valor, Long investimentoId, boolean credito) {
+        BasBancoConta bancoConta = vinculosRepository.findById(bancoContaId).orElseThrow(() -> new IllegalArgumentException("Conta bancária não encontrada para o ID: " + bancoContaId));
+
+        BasCompetencia competencia = competenciasRepository.consultaPorMesAno(data.getMonthValue(), data.getYear());
+        BasMovimentacaoFinal movimentacoaFinal = movimentacaoFinalRepostory.findByBancoContaId(bancoConta.getId(), data.getMonthValue(), data.getYear());
+
+        if(movimentacoaFinal == null){
+            movimentacoaFinal = new BasMovimentacaoFinal();
+            movimentacoaFinal.setBancoConta(bancoConta);
+            movimentacoaFinal.setCompetencia(competencia);
+            movimentacoaFinal = movimentacaoFinalRepostory.save(movimentacoaFinal);
+        }
+
+        BasMovimentacao movimentacao = new BasMovimentacao();
+        movimentacao.setBancoConta(bancoConta);
+        movimentacao.setCompetencia(competencia);
+        movimentacao.setDtMovimentacao(DateUtils.toDate(data));
+        movimentacao.setIcCalcular(EnumSimNao.SIM);
+        movimentacao.setIcSituacao(EnumSimNao.SIM);
+        movimentacao.setNrDia(data.getDayOfMonth());
         
-        BasMovimentacao lancamento = new BasMovimentacao();
-        lancamento.setBancoConta(vinculosRepository.findById(contaId).get());
-       // lancamento.setTipo(tipo);
-        lancamento.setDsObservacao(request.descricao());
+
+        // Define se o lançamento será de Débito com base na regra de negócio
+        boolean eAplicacao = "APLICACAO".equals(tipoMovimentacao);
+        boolean eResgate = "RESGATE".equals(tipoMovimentacao);
+        boolean eTransferencia = "TRANSFERENCIA".equals(tipoMovimentacao);
+
+        BasTipoMovimentacao tipoMOvimentacaoBas = null;
         
-        BasTipoMovimentacao tipoMovimentacao = categoriasRepository.consultarPorNome(categoria);        
-        lancamento.setTipoMovimentacao(tipoMovimentacao);
         
-        lancamento.setVlCredito(Optional.ofNullable(request.valor()).filter(v-> v.doubleValue() >0.0).orElse(null));
-        lancamento.setVlDebito(Optional.ofNullable(request.valor()).filter(v-> v.doubleValue()<0.0).orElse(null));
-        lancamento.setDtMovimentacao(DateUtils.toDate(request.data()));
-        lancamento.setVinculado(lancamentosRepository.findById(transferenciaId).get());
-        //lancamento.setInvestimentoId(transferenciaId);
-        return lancamento;
+        if(eAplicacao){
+            tipoMOvimentacaoBas = categoriasRepository.findById(8l).orElseThrow(() -> naoEncontrado("Categoria"));
+
+            if(credito){
+                movimentacao.setDsObservacao("Aplicação enviada");
+                movimentacao.setVlDebito(valor);
+                movimentacao.setVlCredito(BigDecimal.ZERO);
+                movimentacoaFinal.setVlTotalDebito(movimentacoaFinal.getVlTotalDebito().add(valor));
+            }else{
+                movimentacao.setDsObservacao("Aplicação recebida");
+                movimentacao.setVlCredito(valor);
+                movimentacao.setVlDebito(BigDecimal.ZERO);
+                movimentacoaFinal.setVlTotalCredito(movimentacoaFinal.getVlTotalCredito().add(valor));
+
+            }
+        }
+
+
+        if(eResgate){
+            tipoMOvimentacaoBas = categoriasRepository.findById(2l).orElseThrow(() -> naoEncontrado("Categoria"));  
+             
+            if(credito){
+                movimentacao.setDsObservacao("Resgate recebido");
+                movimentacao.setVlCredito(valor);
+                movimentacao.setVlDebito(BigDecimal.ZERO);
+                movimentacoaFinal.setVlTotalCredito(movimentacoaFinal.getVlTotalCredito().add(valor));
+            }else{
+                movimentacao.setDsObservacao("Resgate enviada");
+                movimentacao.setVlDebito(valor);
+                movimentacao.setVlCredito(BigDecimal.ZERO);
+                movimentacoaFinal.setVlTotalDebito(movimentacoaFinal.getVlTotalDebito().add(valor));
+            }
+        }
+
+        if(eTransferencia){
+            tipoMOvimentacaoBas = categoriasRepository.findById(27L).orElseThrow(() -> naoEncontrado("Categoria")); 
+
+            if(credito){
+                movimentacao.setDsObservacao("Transferencia enviada");
+                movimentacao.setVlDebito(valor);  
+                movimentacao.setVlCredito(BigDecimal.ZERO);
+                              
+                movimentacoaFinal.setVlTotalCredito(movimentacoaFinal.getVlTotalCredito().add(valor));
+            }else{
+                movimentacao.setDsObservacao("Transferencia recebido");
+                movimentacao.setVlCredito(valor);
+                movimentacao.setVlDebito(BigDecimal.ZERO);
+                movimentacoaFinal.setVlTotalDebito(movimentacoaFinal.getVlTotalDebito().add(valor));
+            }
+        }
+
+        movimentacao.setTipoMovimentacao(tipoMOvimentacaoBas);
+
+        //Tipo de investimentos
+        if(eAplicacao || eResgate){
+            Optional<BasInvestimento> tipoInvestimento = investimentosRepository.findById(investimentoId);            
+            movimentacao.setInvestimento(tipoInvestimento.get());
+        }else{
+            movimentacao.setInvestimento(null);
+        }
+
+        BigDecimal saldo = Optional.ofNullable(movimentacao.getVlCredito()).map(value -> value).orElse(BigDecimal.ZERO);
+        BigDecimal vlDebito = Optional.ofNullable(movimentacao.getVlDebito()).orElse(BigDecimal.ZERO);
+        BigDecimal vlCredito = Optional.ofNullable(movimentacao.getVlCredito()).orElse(BigDecimal.ZERO);
+        BigDecimal vlInicial = Optional.ofNullable(movimentacoaFinal.getVlSaldoInicial()).orElse(BigDecimal.ZERO);
+
+            saldo = 
+                vlCredito
+                .add(vlDebito.negate())
+                .add(vlInicial);
+                
+            
+            movimentacoaFinal.setVlSaldoFinal(saldo);
+            movimentacaoFinalRepostory.save(movimentacoaFinal);
+
+       return  movimentacao;        
     }
 
-   
 
-    private BigDecimal buscarSaldoTransferencia(Long contaId) {
-        BasBancoConta vinculo = vinculosRepository.findById(contaId).orElse(null);
-        if (vinculo != null)
-            return vinculo.getVlSaldoAtual() == null ? BigDecimal.ZERO : vinculo.getVlSaldoAtual();
-      //  Investimento investimento = buscarInvestimentoEntity(contaId);
-        return null;
-    }
 
     private BasBanco toEntity(BancoDto dto) {
         BasBanco e = new BasBanco();
@@ -348,8 +442,8 @@ public class FinanceiroService {
         
         BasTipoMovimentacao tipoMovimentacao = categoriasRepository.consultarPorNome(dto.categoria());        
         basMovimentacao.setTipoMovimentacao(tipoMovimentacao);
-        basMovimentacao.setVlCredito(dto.valor().doubleValue()  > 0.0 ? dto.valor() : BigDecimal.ZERO);
-        basMovimentacao.setVlDebito(dto.valor().doubleValue()  < 0.0 ? dto.valor() : BigDecimal.ZERO);
+        basMovimentacao.setVlCredito(dto.tipo() == EnumTipoMovimentacao.CREDITO  ? dto.valor() : BigDecimal.ZERO);
+        basMovimentacao.setVlDebito(dto.tipo() == EnumTipoMovimentacao.DEBITO ? dto.valor() : BigDecimal.ZERO);
         basMovimentacao.setDtMovimentacao(DateUtils.stringToDate(dto.data()));
         basMovimentacao.setDsObservacao(dto.observacao());
         basMovimentacao.setVlSaldo(dto.saldoApos());
@@ -381,16 +475,16 @@ public class FinanceiroService {
                  .map(BasMovimentacao::getId) // Substitua 'Vinculado' pela classe do objeto retornado por getVinculado()
                  .orElse(null);
 
-        return new LancamentoDto(e.getId(), 
-        e.getBancoConta().getId(),
+                 BigDecimal valor = e.getVlCredito().compareTo(BigDecimal.ZERO) != 0
+                    ? e.getVlCredito()
+                    : e.getVlDebito().negate();
+                
+               
+
+        return new LancamentoDto(e.getId(), e.getBancoConta().getId(),
         e.getTipoMovimentacao().getIcTipoMovimentacao(), e.getDsObservacao()
-        , e.getTipoMovimentacao().getDsTipoMovimentacao(), 
-        Optional.ofNullable(e.getVlCredito())
-            .filter(v ->  v.compareTo(BigDecimal.ZERO) != 0.0)
-            .orElseGet(e::getVlDebito), 
-         DateUtils.dateToString(e.getDtMovimentacao()), 
-        e.getDsObservacao(), 
-        e.getVlSaldo(), 
+        , e.getTipoMovimentacao().getDsTipoMovimentacao(),  valor, 
+         DateUtils.dateToString(e.getDtMovimentacao()), e.getDsObservacao(),  e.getVlSaldo(), 
         Optional.ofNullable(e.getInvestimento())
                 .map(BasInvestimento::getId)
                 .orElse(null)
@@ -406,9 +500,6 @@ public class FinanceiroService {
         return vinculosRepository.findById(id).orElseThrow(() -> naoEncontrado("Vínculo"));
     }
 
-    private BasInvestimento buscarInvestimentoEntity(Long id) {
-        return investimentosRepository.findById(id).orElseThrow(() -> naoEncontrado("Investimento"));
-    }
 
     private BasMovimentacao buscarLancamentoEntity(Long id) {
         return lancamentosRepository.findById(id).orElseThrow(() -> naoEncontrado("Lançamento"));
@@ -426,5 +517,32 @@ public class FinanceiroService {
     public List<Object[]> registrarLancamentos(Integer ano) {
     List<Object[]> listar = lancamentosRepository.registrar(ano);        
         return listar;
+    }
+
+
+
+    public void atualizarSaldo(Long contaBancoId, LocalDate competenciaId) {
+        Integer[] diaMesAno = DateUtils.getDiaMesEAno(competenciaId);
+        BasCompetencia basCompetencia = competenciasRepository.consultaPorMesAno(diaMesAno[1], diaMesAno[2]);
+        BasBancoConta basBancoConta = vinculosRepository.findById(contaBancoId).get();
+        BasMovimentacaoFinal movimentacaoFinal =  movimentacaoFinalRepostory.findByBancoContaId(contaBancoId, diaMesAno[1], diaMesAno[2]);
+
+
+        List<BasMovimentacao> listarMovimentacao = lancamentosRepository.findByContaIdOrderByDataDesc(basBancoConta.getId(), basCompetencia.getId());
+
+        BigDecimal inicial = movimentacaoFinal.getVlSaldoInicial();
+        BigDecimal vlSaldo = inicial; 
+        for(BasMovimentacao m : listarMovimentacao){
+            BigDecimal vlDebito =  m.getVlDebito();
+            BigDecimal vlCredito = m.getVlCredito();
+            vlSaldo = vlSaldo.add(inicial.add(vlCredito.add(vlDebito.negate())));
+            m.setVlSaldo(vlSaldo);
+            lancamentosRepository.save(m);
+        }
+
+        basBancoConta.setVlSaldoAtual(vlSaldo);
+        vinculosRepository.save(basBancoConta);
+
+
     }
 }

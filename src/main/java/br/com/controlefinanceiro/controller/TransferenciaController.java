@@ -14,7 +14,8 @@ public class TransferenciaController {
     }
 
     @PostMapping
-    public TransferenciaDto criar(@RequestBody TransferenciaDto dto) {
-        return service.criar(dto);
+    public void criar(@RequestBody TransferenciaDto dto) {
+        service.criar(dto);
+       // return 
     }
 }

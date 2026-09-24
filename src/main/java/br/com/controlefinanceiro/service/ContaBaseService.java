@@ -5,7 +5,6 @@ import br.com.controlefinanceiro.model.BasConta;
 
 import br.com.controlefinanceiro.repository.ContaBaseRepository;
 import java.util.List;
-import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service

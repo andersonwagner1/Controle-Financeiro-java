@@ -2,7 +2,6 @@ package br.com.controlefinanceiro.controller;
 
 import br.com.controlefinanceiro.dto.DashboardDto;
 import br.com.controlefinanceiro.service.FinanceiroService;
-import java.time.LocalDate;
 import java.util.Date;
 
 import org.springframework.web.bind.annotation.GetMapping;

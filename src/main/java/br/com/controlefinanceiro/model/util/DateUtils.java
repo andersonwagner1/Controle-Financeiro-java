@@ -118,15 +118,24 @@ public class DateUtils {
         return new Integer[]{dia, mes, ano};
     }
 
+
+    @Deprecated 
     public static Integer[] getMesEAno(LocalDate localDate) {
         if (localDate == null) return new Integer[0];
-        
-        
-
         Integer mes = Integer.parseInt(String.format("%02d", localDate.getMonthValue()));
         Integer ano = Integer.parseInt(String.valueOf(localDate.getYear()));
         
         return new Integer[]{mes, ano};
+    }
+
+
+      public static Integer[] getDiaMesEAno(LocalDate localDate) {
+        if (localDate == null) return new Integer[0];
+        Integer dia = Integer.parseInt(String.format("%02d", localDate.getDayOfMonth()));
+        Integer mes = Integer.parseInt(String.format("%02d", localDate.getMonthValue()));
+        Integer ano = Integer.parseInt(String.valueOf(localDate.getYear()));
+        
+        return new Integer[]{dia, mes, ano};
     }
 
     
@@ -154,4 +163,9 @@ public class DateUtils {
                .atZone(ZoneId.systemDefault())
                .toLocalDate();
 }
+
+
+
+
+
 }

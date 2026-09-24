@@ -4,9 +4,7 @@ import br.com.controlefinanceiro.dto.InvestimentoDto;
 import br.com.controlefinanceiro.model.BasInvestimento;
 
 import br.com.controlefinanceiro.repository.InvestimentoRepository;
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -41,8 +39,7 @@ public class InvestimentoService {
 
 
     public BasInvestimento buscarEntidade(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Investimento não encontrado"));
+        return repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Investimento não encontrado"));
     }
 
     private InvestimentoDto salvar(InvestimentoDto dto, Long id) {
@@ -56,5 +53,13 @@ public class InvestimentoService {
 
     private InvestimentoDto toDto(BasInvestimento investimento) {
         return new InvestimentoDto(investimento.getId(), investimento.getDsInvestimento(), investimento.getIcSituacao());
+    }
+
+    public List<InvestimentoDto> listarContasVinculadas(Long bancoConta) {
+        List<BasInvestimento> lista = repository.listarPorBancoConta(bancoConta);
+        return  lista.stream()
+            .map(b -> new InvestimentoDto(b.getId(), b.getDsInvestimento(), b.getIcSituacao()))
+            .toList();
+
     }
 }
