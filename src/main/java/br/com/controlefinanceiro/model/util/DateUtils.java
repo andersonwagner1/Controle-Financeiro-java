@@ -7,7 +7,7 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.Locale;
+
 
 public class DateUtils {
 
@@ -31,6 +31,10 @@ public class DateUtils {
 
 
 
+    public static LocalDate stringToLocale(String data){
+        Date dt = stringToDate(data);
+        return toLocalDate(dt);
+    }
 
     /**
      * Converte um java.util.Date em String usando o formato padrão (dd/MM/yyyy).

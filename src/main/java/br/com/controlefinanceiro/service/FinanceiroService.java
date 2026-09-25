@@ -141,9 +141,15 @@ public class FinanceiroService {
 
     @Transactional
     public LancamentoDto criarLancamento(LancamentoDto dto) {
-        ajustarSaldoFinal(dto.data(), dto.bancoContaId(), dto.valor(), dto.tipo());
+        atualizaMovimentacaoFinal(dto.data(), dto.bancoContaId(), dto.valor(), dto.tipo());
+        
         BasMovimentacao movimentacao = toEntity(dto);
-        return toDto(lancamentosRepository.save(movimentacao));
+        //Registra o lancamento
+        LancamentoDto to =  toDto(lancamentosRepository.save(movimentacao));
+
+        //atualiza o saldo dos registro
+        atualizarSaldo(dto.bancoContaId(), DateUtils.stringToLocale(dto.data()));
+        return to;
     }
 
 
@@ -155,43 +161,38 @@ public class FinanceiroService {
      * @param tipo
      * @return
      */
-    private void ajustarSaldoFinal(String data, Long bancoContaId, BigDecimal valor, EnumTipoMovimentacao tipo) {
-        Integer mesAno[] = DateUtils.getDiaMesAno(data);
-        BasMovimentacaoFinal movimentacao = movimentacaoFinalRepostory.findByBancoContaId(bancoContaId, mesAno[1], mesAno[2]);
+    private void atualizaMovimentacaoFinal(String data, Long bancoContaId, BigDecimal valor, EnumTipoMovimentacao tipo) {
+        //separa o dia mes e ano e localiza a competencia
+        Integer mesAno[] = DateUtils.getDiaMesAno(data);        
         BasCompetencia comptencia = competenciasRepository.consultaPorMesAno(mesAno[1], mesAno[2]);
 
-        if(movimentacao == null){
-            BasBancoConta bancoConta = buscarVinculoEntity(bancoContaId);
-            movimentacao = new BasMovimentacaoFinal();
-            movimentacao.setCompetencia(comptencia);
-            movimentacao.setBancoConta(bancoConta);         
-        }
-
+        //pega o saldo inicial da competencia da conta
+        BasMovimentacaoFinal movimentacaoFinal = criarMOvimentacaoFinal(vinculosRepository.findById(bancoContaId).get(), comptencia);
+       
+         
 
         //verificar se esta subtraindo ou adicionando
         if( tipo == EnumTipoMovimentacao.CREDITO){
-            movimentacao.setVlTotalCredito(movimentacao.getVlTotalCredito().add(valor));
-            
+            movimentacaoFinal.setVlTotalCredito(movimentacaoFinal.getVlTotalCredito().add(valor));            
         }else{            
-            movimentacao.setVlTotalDebito(movimentacao.getVlTotalDebito().add(valor));
+            movimentacaoFinal.setVlTotalDebito(movimentacaoFinal.getVlTotalDebito().add(valor));
         }
 
 
-        //Realiza a somatoria
-        movimentacao.setVlSaldoFinal(
-            movimentacao.getVlSaldoInicial()
-        .add(movimentacao.getVlTotalCredito())
-        .add(movimentacao.getVlTotalDebito().negate())
+        //Realiza o saldo do reigstro final
+        movimentacaoFinal.setVlSaldoFinal(
+            movimentacaoFinal.getVlSaldoInicial()
+        .add(movimentacaoFinal.getVlTotalCredito())
+        .add(movimentacaoFinal.getVlTotalDebito().negate())
     );
     
-
-        movimentacaoFinalRepostory.save(movimentacao);
+        //atualiza o saldo final
+        movimentacaoFinalRepostory.save(movimentacaoFinal);
         
-        //
-        BasBancoConta bancoConta = movimentacao.getBancoConta();
-        bancoConta.setVlSaldoAtual(movimentacao.getVlSaldoFinal());
+        //atualiza o saldo do vinculo
+        BasBancoConta bancoConta = movimentacaoFinal.getBancoConta();
+        bancoConta.setVlSaldoAtual(movimentacaoFinal.getVlSaldoFinal());
         vinculosRepository.save(bancoConta);
-
 
     }
 
@@ -204,7 +205,13 @@ public class FinanceiroService {
         BasMovimentacao novo = toEntity(dto);
         novo.setId(id);
        // ajustarSaldo(novo.getBancoConta().getId(), novo.getTipoMovimentacao().getIcTipoMovimentacao(), novo.getVlCredito());
-        return toDto(lancamentosRepository.save(novo));
+        dto =  toDto(lancamentosRepository.save(novo));
+        
+        //atualiza o saldo dos registro
+        atualizarSaldo(dto.bancoContaId(), DateUtils.stringToLocale(dto.data()));
+
+        return dto;
+
     }
 
     @Transactional
@@ -248,8 +255,25 @@ public class FinanceiroService {
        //VINCULAR COM O DESTINO
         movimentacaoOrigem.setVinculado(movimentacaoDestino);
         lancamentosRepository.save(movimentacaoOrigem);
+    }
 
-        
+    private BasMovimentacaoFinal criarMOvimentacaoFinal(BasBancoConta bancoConta, BasCompetencia competencia){
+        BasMovimentacaoFinal movimentacoaFinal = movimentacaoFinalRepostory.findByBancoContaId(bancoConta.getId(),competencia.getId());
+
+        if(movimentacoaFinal == null){
+            movimentacoaFinal = new BasMovimentacaoFinal();
+            movimentacoaFinal.setBancoConta(bancoConta);
+            movimentacoaFinal.setCompetencia(competencia);
+            BasMovimentacaoFinal movimentacoaFinalAnterior = movimentacaoFinalRepostory.findByBancoContaId(bancoConta.getId(),competencia.getId()-1);
+            if(movimentacoaFinalAnterior != null){
+               movimentacoaFinal.setVlSaldoInicial(movimentacoaFinalAnterior.getVlSaldoFinal());
+            }
+
+            movimentacoaFinal = movimentacaoFinalRepostory.save(movimentacoaFinal);
+        }
+
+
+        return movimentacoaFinal;
 
     }
 
@@ -258,14 +282,7 @@ public class FinanceiroService {
         BasBancoConta bancoConta = vinculosRepository.findById(bancoContaId).orElseThrow(() -> new IllegalArgumentException("Conta bancária não encontrada para o ID: " + bancoContaId));
 
         BasCompetencia competencia = competenciasRepository.consultaPorMesAno(data.getMonthValue(), data.getYear());
-        BasMovimentacaoFinal movimentacoaFinal = movimentacaoFinalRepostory.findByBancoContaId(bancoConta.getId(), data.getMonthValue(), data.getYear());
-
-        if(movimentacoaFinal == null){
-            movimentacoaFinal = new BasMovimentacaoFinal();
-            movimentacoaFinal.setBancoConta(bancoConta);
-            movimentacoaFinal.setCompetencia(competencia);
-            movimentacoaFinal = movimentacaoFinalRepostory.save(movimentacoaFinal);
-        }
+        BasMovimentacaoFinal movimentacoaFinal= criarMOvimentacaoFinal(bancoConta, competencia);
 
         BasMovimentacao movimentacao = new BasMovimentacao();
         movimentacao.setBancoConta(bancoConta);
@@ -525,7 +542,9 @@ public class FinanceiroService {
         Integer[] diaMesAno = DateUtils.getDiaMesEAno(competenciaId);
         BasCompetencia basCompetencia = competenciasRepository.consultaPorMesAno(diaMesAno[1], diaMesAno[2]);
         BasBancoConta basBancoConta = vinculosRepository.findById(contaBancoId).get();
-        BasMovimentacaoFinal movimentacaoFinal =  movimentacaoFinalRepostory.findByBancoContaId(contaBancoId, diaMesAno[1], diaMesAno[2]);
+        //BasMovimentacaoFinal movimentacaoFinal =  movimentacaoFinalRepostory.findByBancoContaId(contaBancoId, diaMesAno[1], diaMesAno[2]);
+
+        BasMovimentacaoFinal movimentacaoFinal = criarMOvimentacaoFinal(basBancoConta, basCompetencia);
 
 
         List<BasMovimentacao> listarMovimentacao = lancamentosRepository.findByContaIdOrderByDataDesc(basBancoConta.getId(), basCompetencia.getId());

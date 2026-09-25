@@ -12,4 +12,11 @@ public interface BasMovimentacaoFinalRepository extends JpaRepository<BasMovimen
     BasMovimentacaoFinal findByBancoContaId(Long bancoContaId, Integer mes, Integer ano);
 
 
+    @Query ("SELECT x FROM BasMovimentacaoFinal x " +
+    " WHERE x.bancoConta.id = :bancoContaId " +
+    " AND x.competencia.id = :competencia ")
+    BasMovimentacaoFinal findByBancoContaId(Long bancoContaId, Long competencia);
+
+
+
 }
