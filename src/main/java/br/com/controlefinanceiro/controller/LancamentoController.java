@@ -1,8 +1,8 @@
 package br.com.controlefinanceiro.controller;
 
 import br.com.controlefinanceiro.dto.LancamentoDto;
+import br.com.controlefinanceiro.model.BasMovimentacaoFinal;
 import br.com.controlefinanceiro.model.util.DateUtils;
-import br.com.controlefinanceiro.service.CategoriaService;
 import br.com.controlefinanceiro.service.LancamentoService;
 
 import java.util.Date;
@@ -14,15 +14,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/lancamentos")
 public class LancamentoController {
     private final LancamentoService service;
-    private CategoriaService categoriaService;
 
-    public LancamentoController(LancamentoService service, CategoriaService categoriaService) {
+
+    public LancamentoController(LancamentoService service) {
         this.service = service;
-        this.categoriaService = categoriaService;
-
     }
 
-    @GetMapping
+    @GetMapping("/lista")
     public List<LancamentoDto> listar(@RequestParam(required = false) Long contaId,
          String dataInicial,
          String dataFinal) {
@@ -33,7 +31,19 @@ public class LancamentoController {
         
     }
 
-    @GetMapping("/{id}")
+
+    
+
+
+    @GetMapping("/saldo")
+    public BasMovimentacaoFinal listar(@RequestParam(required = false) Long contaId,  String dataInicial)
+          {
+            Date dInicial = DateUtils.stringToDate(dataInicial);
+        return service.consultarSaldo(contaId, dInicial);
+        
+    }
+
+    @GetMapping("/detalhes/{id}")
     public LancamentoDto buscar(@PathVariable Long id) {
         return service.buscar(id);
     }

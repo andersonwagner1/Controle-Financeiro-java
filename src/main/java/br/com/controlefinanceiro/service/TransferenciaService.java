@@ -13,7 +13,7 @@ public class TransferenciaService {
 
     public void criar(TransferenciaDto dto) {
         financeiroService.transferir(dto);  
-        financeiroService.atualizarSaldo(dto.bancoContaId(), dto.data());
-        financeiroService.atualizarSaldo(dto.bancoContaDestinoId(), dto.data());
+        financeiroService.atualizarSaldoMovimentacoaFinal(dto.bancoContaId(), dto.data());
+        financeiroService.atualizarSaldoMovimentacoaFinal(dto.bancoContaDestinoId(), dto.data());
     }
 }

@@ -1,4 +1,6 @@
 package br.com.controlefinanceiro.repository;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -16,6 +18,11 @@ public interface BasMovimentacaoFinalRepository extends JpaRepository<BasMovimen
     " WHERE x.bancoConta.id = :bancoContaId " +
     " AND x.competencia.id = :competencia ")
     BasMovimentacaoFinal findByBancoContaId(Long bancoContaId, Long competencia);
+
+
+    @Query ("SELECT x FROM BasMovimentacaoFinal x " +
+    " WHERE x.competencia.id = :competencia ")
+    List<BasMovimentacaoFinal> findMovimentacaoFinal(Long competencia);
 
 
 

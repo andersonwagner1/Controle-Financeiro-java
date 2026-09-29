@@ -1,6 +1,8 @@
 package br.com.controlefinanceiro.service;
 
 import br.com.controlefinanceiro.dto.LancamentoDto;
+import br.com.controlefinanceiro.model.BasMovimentacao;
+import br.com.controlefinanceiro.model.BasMovimentacaoFinal;
 
 import java.util.Date;
 import java.util.List;
@@ -9,11 +11,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class LancamentoService {
     private final FinanceiroService financeiroService;
-    private final TransferenciaService transferenciaService;
+    //private final TransferenciaService transferenciaService;
+    
 
-    public LancamentoService(FinanceiroService financeiroService, TransferenciaService transferenciaService) {
+    public LancamentoService(FinanceiroService financeiroService/*, TransferenciaService transferenciaService*/) {
         this.financeiroService = financeiroService;
-        this.transferenciaService = transferenciaService;
+        //this.transferenciaService = transferenciaService;
     }
 
     public List<LancamentoDto> listar(Long contaId, Date dataInicial, Date dataFinal) {
@@ -38,8 +41,9 @@ public class LancamentoService {
 
 
 
-    public void categorias() {
 
-        
+    public BasMovimentacaoFinal consultarSaldo(Long contaId, Date dInicial) {
+       
+       return financeiroService.consultarSaldo(contaId, dInicial);
     }
 }
