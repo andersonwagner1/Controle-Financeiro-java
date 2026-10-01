@@ -74,8 +74,8 @@ public class BancoContaService {
     }
 
     private VinculoDto salvar(VinculoDto dto) {
-        Integer[] dataInicial = DateUtils.getMesEAno(dto.dataInicio());
-        Integer[] dataFinal = DateUtils.getMesEAno(dto.dataInicio());
+        Integer[] dataInicial = DateUtils.getDiaMesEAno(dto.dataInicio());
+        Integer[] dataFinal = DateUtils.getDiaMesEAno(dto.dataInicio());
 
 
         BasBancoConta vinculo = new BasBancoConta();
@@ -83,8 +83,8 @@ public class BancoContaService {
         vinculo.setBanco(bancoRepository.findById(dto.bancoId()).get());
         vinculo.setConta(contaBaseRepository.findById(dto.contaBaseId()).get());
         vinculo.setVlSaldoAtual(dto.saldo() == null ? BigDecimal.ZERO : dto.saldo());
-        vinculo.setDtAbertura(competenciaRespository.consultaPorMesAno( dataInicial[0], dataInicial[1]));
-        vinculo.setDtFechamento(competenciaRespository.consultaPorMesAno( dataFinal[0], dataFinal[1]));
+        vinculo.setDtAbertura(competenciaRespository.consultaPorMesAno( dataInicial[1], dataInicial[2]));
+        vinculo.setDtFechamento(competenciaRespository.consultaPorMesAno( dataFinal[1], dataFinal[2]));
        // vinculo.setRentabilidade(dto.rentabilidade());
        // vinculo.setVencimento(dto.vencimento());
         vinculo.setIcSituacao(EnumSimNao.SIM);

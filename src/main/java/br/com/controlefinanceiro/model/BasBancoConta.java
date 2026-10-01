@@ -3,6 +3,7 @@ package br.com.controlefinanceiro.model;
 import java.math.BigDecimal;
 
 import br.com.controlefinanceiro.model.emurador.EnumSimNao;
+import br.com.controlefinanceiro.model.emurador.EnumTipoMovimentacao;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

@@ -24,6 +24,6 @@ public class DashboardController {
         return new DashboardDto(
                 service.listarBancos(),
                 service.listarContas(),
-                service.listarLancamentos(null, dataInicial, dataFinal));
+                null); //service.listarLancamentos(null, dataInicial, dataFinal));
     }
 }

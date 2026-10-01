@@ -1,116 +1,92 @@
 package br.com.controlefinanceiro.service;
 
-
 import br.com.controlefinanceiro.model.BasBancoConta;
 import br.com.controlefinanceiro.model.BasCompetencia;
-import br.com.controlefinanceiro.model.BasConta;
 import br.com.controlefinanceiro.model.BasMovimentacao;
-import br.com.controlefinanceiro.model.BasMovimentacaoFinal;
 import br.com.controlefinanceiro.model.util.DateUtils;
 import br.com.controlefinanceiro.repository.BancoContaRepository;
 import br.com.controlefinanceiro.repository.BasCompetenciaRespository;
 import br.com.controlefinanceiro.repository.BasMovimentacaoFinalRepository;
-import br.com.controlefinanceiro.repository.ContaBaseRepository;
 import br.com.controlefinanceiro.repository.LancamentoRepository;
+import br.com.controlefinanceiro.repository.TipoMovimentacaoRepository;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 @Service
 public class MovimentaocaFinalService {
 
-    //private final TransferenciaService transferenciaService;
-    
+    // private final TransferenciaService transferenciaService;
 
     private BasMovimentacaoFinalRepository movimentacaoFinalRepository;
     private BasCompetenciaRespository competenciaRespository;
     private LancamentoRepository lancamentoRepository;
     private BancoContaRepository bancoContaRepository;
+    private LancamentoService lancamentoService;
 
-
-
-    public MovimentaocaFinalService(BasMovimentacaoFinalRepository movimentacaoFinalRepository, 
-        BasCompetenciaRespository competenciaRespository, 
-        LancamentoRepository lancamentoRepository,
-    BancoContaRepository bancoContaRepository) {
+    public MovimentaocaFinalService(           
+            BasMovimentacaoFinalRepository movimentacaoFinalRepository,
+            BasCompetenciaRespository competenciaRespository,
+            LancamentoRepository lancamentoRepository,
+            BancoContaRepository bancoContaRepository,
+            LancamentoRepository movimentacaoRepository,
+            TipoMovimentacaoRepository tipoMovimentacaoRepository) {
         this.movimentacaoFinalRepository = movimentacaoFinalRepository;
         this.competenciaRespository = competenciaRespository;
-        this.lancamentoRepository = lancamentoRepository;   
-        this.bancoContaRepository =bancoContaRepository;
-        //this.transferenciaService = transferenciaService;
+        this.lancamentoRepository = lancamentoRepository;
+        this.bancoContaRepository = bancoContaRepository;
     }
 
-
-    /**
-     * 
-     * @param bancoContaId
-     * @param competenciaId
-     * @return
-     */
-    private boolean atualizarMovimentaacaoGeral(Long bancoContaId, Long competenciaId){
-        boolean continua = true;
-        Optional<BasBancoConta> bancoConta = bancoContaRepository.findById(bancoContaId);
-        long t = bancoConta.get().getId();
-        List<BasMovimentacao> listaLancamentos = lancamentoRepository.findByContaIdOrderByDataDesc(t,competenciaId);
-        BasMovimentacaoFinal movimentacaoFinal = movimentacaoFinalRepository.findByBancoContaId(bancoConta.get().getId(),competenciaId);
-        
-        if(movimentacaoFinal == null){
-            return false; 
-        }
-
-        BigDecimal saldoInicial = movimentacaoFinal.getVlSaldoInicial();
-        BigDecimal creditoTotal = BigDecimal.ZERO;
-        BigDecimal debitoTotal= BigDecimal.ZERO;
-
-        for(BasMovimentacao l : listaLancamentos){
-            BigDecimal credito = l.getVlCredito();
-            BigDecimal debito = l.getVlDebito();
-
-            creditoTotal = creditoTotal.add(credito);
-            debitoTotal = debitoTotal.add(debito);
-
-            l.setVlSaldo(saldoInicial.add(creditoTotal.add(debitoTotal.negate())));
-            lancamentoRepository.save(l);
-        }
-
-
-        movimentacaoFinal.setVlSaldoInicial(saldoInicial);
-        movimentacaoFinal.setVlSaldoFinal(saldoInicial);
-        movimentacaoFinal.setVlTotalCredito(creditoTotal);
-        movimentacaoFinal.setVlTotalDebito(debitoTotal);
-
-        movimentacaoFinalRepository.save(movimentacaoFinal);
-
-        if(continua){
-            atualizarMovimentaacaoGeral(bancoContaId, competenciaId+1);
-        }
-
-        return false;
-    }
-
+  
     /**
      * Atualizar os saldos
+     * 
      * @param bancoContaId
      * @param d
      */
-    public void atualizarMovimentacaoGeral(Long bancoContaId,String d){        
-        Integer[] mes =  DateUtils.getDiaMesAno(d);
+    public void atualizarCorrrigirSaldoApartirDoMes(Long bancoContaId, Long competenciaFinal) {
+        BasBancoConta bancoConta = bancoContaRepository.findById(bancoContaId).get();
+        BasCompetencia competencia= competenciaRespository.findById(competenciaFinal).get();;
 
-        BasCompetencia competencia = competenciaRespository.consultaPorMesAno(mes[1], mes[2]);
-      
-
-        atualizarMovimentaacaoGeral(bancoContaId, competencia.getId());
-
-       
+        do{
+            competenciaFinal++;
+            lancamentoService.atualizarSaldoMovimentacaoFinal(bancoConta, competencia);
+            competencia= competenciaRespository.findById(competenciaFinal).get();
+        }while (competencia != null);
     }
 
 
-    /**
-     * Crie metodo para atualizar os posteriores
-     */
+    public void atualizarSaldo(Long bancoContaId, String dataInicial, Double saldo) {
+      
+        Integer[] anomesDia = DateUtils.getDiaMesAno(dataInicial);
+        BasCompetencia competencia = competenciaRespository.consultaPorMesAno(anomesDia[1], anomesDia[2]);
+        BasBancoConta bancoConta = bancoContaRepository.findById(bancoContaId).get();
 
+        List<BasMovimentacao> rendimentos = lancamentoRepository.listarRendimentos(bancoContaId, competencia.getId() );
+
+        BasMovimentacao registroLencimento  = null;
+        
+        //zerar o registros
+        if(rendimentos.size() != 0){
+            registroLencimento = rendimentos.get(0);
+            registroLencimento.setVlDebito(BigDecimal.ZERO);
+            registroLencimento.setVlCredito(BigDecimal.ZERO);
+            lancamentoRepository.save(registroLencimento);
+            lancamentoService.atualizarSaldoMovimentacaoFinal(bancoConta, competencia);
+        }else{
+            registroLencimento = new BasMovimentacao();
+        }
+
+
+
+
+        
+
+
+
+
+
+    }
 }

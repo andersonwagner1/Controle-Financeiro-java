@@ -1,7 +1,8 @@
 package br.com.controlefinanceiro.controller;
 
-import br.com.controlefinanceiro.dto.LancamentoDto;
-import br.com.controlefinanceiro.model.BasMovimentacaoFinal;
+import br.com.controlefinanceiro.dto.LancamentoResponseDto;
+import br.com.controlefinanceiro.dto.SaldoResponseDto;
+import br.com.controlefinanceiro.dto.LancamentoRequestDto;
 import br.com.controlefinanceiro.model.util.DateUtils;
 import br.com.controlefinanceiro.service.LancamentoService;
 
@@ -15,13 +16,29 @@ import org.springframework.web.bind.annotation.*;
 public class LancamentoController {
     private final LancamentoService service;
 
-
     public LancamentoController(LancamentoService service) {
         this.service = service;
     }
 
+
+     @PostMapping
+    public void criar(@RequestBody LancamentoRequestDto dto) {
+        service.realizarLancamento(dto);
+        
+    }
+
+
+
+    /**
+     * Lista todos os registros
+     * @param contaId
+     * @param dataInicial
+     * @param dataFinal
+     * @return
+     */
+    
     @GetMapping("/lista")
-    public List<LancamentoDto> listar(@RequestParam(required = false) Long contaId,
+    public List<LancamentoResponseDto> listar(@RequestParam(required = false) Long contaId,
          String dataInicial,
          String dataFinal) {
             Date dInicial = DateUtils.stringToDate(dataInicial);
@@ -32,29 +49,26 @@ public class LancamentoController {
     }
 
 
-    
-
-
+    /**
+     
+     * @param contaId
+     * @param dataInicial
+     * @return
+     */
     @GetMapping("/saldo")
-    public BasMovimentacaoFinal listar(@RequestParam(required = false) Long contaId,  String dataInicial)
-          {
-            Date dInicial = DateUtils.stringToDate(dataInicial);
-        return service.consultarSaldo(contaId, dInicial);
-        
+    public SaldoResponseDto consultarSaltoFinal(@RequestParam(required = false) Long contaId,  String dataInicial){
+        Integer[] competencia = DateUtils.getDiaMesAno(dataInicial);
+        return service.consultarSaldo(contaId, competencia);        
     }
 
     @GetMapping("/detalhes/{id}")
-    public LancamentoDto buscar(@PathVariable Long id) {
-        return service.buscar(id);
+    public LancamentoResponseDto buscar(@PathVariable Long id) {
+        return service.consultarRegistros(id);
     }
 
-    @PostMapping
-    public LancamentoDto criar(@RequestBody LancamentoDto dto) {
-        return service.criar(dto);
-    }
 
     @PutMapping("/{id}")
-    public LancamentoDto atualizar(@PathVariable Long id, @RequestBody LancamentoDto dto) {
+    public LancamentoResponseDto atualizar(@PathVariable Long id, @RequestBody LancamentoRequestDto dto) {
         return service.atualizar(id, dto);
     }
 

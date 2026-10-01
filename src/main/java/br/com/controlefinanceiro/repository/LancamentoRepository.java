@@ -2,6 +2,7 @@ package br.com.controlefinanceiro.repository;
 
 import br.com.controlefinanceiro.model.BasMovimentacao;
 
+
 import java.util.Date;
 import java.util.List;
 
@@ -62,5 +63,13 @@ public interface LancamentoRepository extends JpaRepository<BasMovimentacao, Lon
             "    or (IC_tipo_movimentacao in ('APLICACAO') and BM.vl_credito  >0))  " +
             "    ORDER BY BM.DT_MOVIMENTACAO ASC        ", nativeQuery = true)
     List<Object[]> registrar(@Param("ano") Integer ano);
+
+
+    @Query ("select l from BasMovimentacao l " +
+        " WHERE l.tipoMovimentacao.id in(6,21) " +
+        " AND  l.bancoConta.id = :bancoContaId "  +
+        " AND l.competencia.id =:competenciaId " +
+        " ORDER by l.dtMovimentacao asc")
+    List<BasMovimentacao> listarRendimentos(Long bancoContaId, Long competenciaId);
 
 }
