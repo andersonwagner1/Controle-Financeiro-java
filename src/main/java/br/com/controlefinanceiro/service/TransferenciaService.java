@@ -6,6 +6,7 @@ import br.com.controlefinanceiro.model.BasCompetencia;
 import br.com.controlefinanceiro.model.BasMovimentacao;
 import br.com.controlefinanceiro.model.BasTipoMovimentacao;
 import br.com.controlefinanceiro.model.util.DateUtils;
+import br.com.controlefinanceiro.model.emurador.EnumSimNao;
 import br.com.controlefinanceiro.repository.BancoContaRepository;
 import br.com.controlefinanceiro.repository.BancoRepository;
 import br.com.controlefinanceiro.repository.BasCompetenciaRespository;
@@ -89,7 +90,7 @@ public class TransferenciaService {
         }
 
 
-        if("TRASNFERENCIA".equals(dto.tipoTransferencia())){
+        if("TRANSFERENCIA".equals(dto.tipoTransferencia())){
             credito = !origem;
             acao = "Transferencia";
 
@@ -118,16 +119,17 @@ public class TransferenciaService {
         movimentacao.setNrPosicao(0);
         movimentacao.setDtMovimentacao(DateUtils.toDate(dto.data()));
         movimentacao.setTipoMovimentacao(basTipoMovimentacao);
-        
+        movimentacao.setIcCalcular(EnumSimNao.SIM);
+        movimentacao.setIcSituacao(EnumSimNao.SIM);
 
 
 
         if(credito){
+            movimentacao.setVlCredito(dto.valor());
+            movimentacao.setVlDebito(BigDecimal.ZERO);            
+        }else{
             movimentacao.setVlCredito(BigDecimal.ZERO);
             movimentacao.setVlDebito(dto.valor());
-        }else{
-            movimentacao.setVlCredito(dto.valor());
-            movimentacao.setVlDebito(BigDecimal.ZERO);
         }
         
          
@@ -142,7 +144,7 @@ public class TransferenciaService {
 
     public void criar(TransferenciaDto dto) {
 
-       BasMovimentacao movimentacaoOrigem = registrarTransferencia(dto, true);
+        BasMovimentacao movimentacaoOrigem = registrarTransferencia(dto, true);
         BasMovimentacao movimentacaoDestino = registrarTransferencia(dto, false);
 
         movimentacaoOrigem = lancamentoRepository.save(movimentacaoOrigem);

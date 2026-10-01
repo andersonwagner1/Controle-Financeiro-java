@@ -19,8 +19,6 @@ import org.springframework.stereotype.Service;
 public class MovimentaocaFinalService {
 
     // private final TransferenciaService transferenciaService;
-
-    private BasMovimentacaoFinalRepository movimentacaoFinalRepository;
     private BasCompetenciaRespository competenciaRespository;
     private LancamentoRepository lancamentoRepository;
     private BancoContaRepository bancoContaRepository;
@@ -33,7 +31,7 @@ public class MovimentaocaFinalService {
             BancoContaRepository bancoContaRepository,
             LancamentoRepository movimentacaoRepository,
             TipoMovimentacaoRepository tipoMovimentacaoRepository) {
-        this.movimentacaoFinalRepository = movimentacaoFinalRepository;
+     
         this.competenciaRespository = competenciaRespository;
         this.lancamentoRepository = lancamentoRepository;
         this.bancoContaRepository = bancoContaRepository;
@@ -78,15 +76,5 @@ public class MovimentaocaFinalService {
         }else{
             registroLencimento = new BasMovimentacao();
         }
-
-
-
-
-        
-
-
-
-
-
     }
 }

@@ -2,9 +2,11 @@ package br.com.controlefinanceiro.service;
 
 import br.com.controlefinanceiro.dto.LancamentoResponseDto;
 import br.com.controlefinanceiro.dto.SaldoResponseDto;
+import br.com.controlefinanceiro.dto.ContaResumoDto;
 import br.com.controlefinanceiro.dto.LancamentoRequestDto;
 import br.com.controlefinanceiro.model.BasBancoConta;
 import br.com.controlefinanceiro.model.BasCompetencia;
+import br.com.controlefinanceiro.model.BasConta;
 import br.com.controlefinanceiro.model.BasInvestimento;
 import br.com.controlefinanceiro.model.BasMovimentacao;
 import br.com.controlefinanceiro.model.BasMovimentacaoFinal;
@@ -31,31 +33,27 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class LancamentoService {
-    private final FinanceiroService financeiroService;
+    //private final FinanceiroService financeiroService;
     //private final TransferenciaService transferenciaService;
 
-     private final BancoRepository bancoRepsoitory;
     private final ContaBaseRepository contasBaseRepository;
     private final TipoMovimentacaoRepository categoriasRepository;
     private final BancoContaRepository vinculosRepository;
-    private final InvestimentoRepository investimentosRepository;
     private final LancamentoRepository lancamentosRepository;
     private final BasCompetenciaRespository competenciasRepository;
     private final BasMovimentacaoFinalRepository movimentacaoFinalRepostory;
 
-    public LancamentoService(FinanceiroService financeiroService, BancoRepository bancos, ContaBaseRepository contasBase,
+    public LancamentoService(BancoRepository bancos, ContaBaseRepository contasBase,
             TipoMovimentacaoRepository categorias, 
             BancoContaRepository vinculos, 
             InvestimentoRepository investimentos,
             LancamentoRepository lancamentos,
             BasMovimentacaoFinalRepository movimentacaoFinalRepostory,
         BasCompetenciaRespository competencias) {
-        this.financeiroService = financeiroService;
-        this.bancoRepsoitory = bancos;
+   
         this.contasBaseRepository = contasBase;
         this.categoriasRepository = categorias;
         this.vinculosRepository = vinculos;
-        this.investimentosRepository = investimentos;
         this.lancamentosRepository = lancamentos;
         this.competenciasRepository = competencias;
         this.movimentacaoFinalRepostory = movimentacaoFinalRepostory;
@@ -219,6 +217,10 @@ public class LancamentoService {
 
 
     private SaldoResponseDto toDto(BasMovimentacaoFinal movimentacaoFinal){
+        if(movimentacaoFinal == null){
+            return SaldoResponseDto.builder().build();
+        }
+
         SaldoResponseDto dto =  SaldoResponseDto.builder()
         .saldoFinal(movimentacaoFinal.getVlSaldoFinal())
         .saldoInicial(movimentacaoFinal.getVlSaldoInicial())
@@ -230,6 +232,10 @@ public class LancamentoService {
     }
         public SaldoResponseDto consultarDetalhesDosSaldos(Long contaId, Integer[] data) {           
             BasCompetencia comeptencia = competenciasRepository.consultaPorMesAno(data[1], data[2]);
+            
+            if(comeptencia == null){
+                return SaldoResponseDto.builder().build();
+            }
         
             if(contaId != null){
                 BasMovimentacaoFinal movimentacao = movimentacaoFinalRepostory.findByBancoContaId(contaId, comeptencia.getId());
@@ -344,7 +350,7 @@ public class LancamentoService {
         BasMovimentacaoFinal movimentacao = new BasMovimentacaoFinal();
         movimentacao.setVlSaldoFinal(vlSaldo);
         movimentacao.setVlTotalCredito(vlTotalCredito);
-        movimentacao.setVlTotalDebito(vlTotalCredito);
+        movimentacao.setVlTotalDebito(vlTotalDebito);
 
 
         return movimentacao;
@@ -369,5 +375,24 @@ public class LancamentoService {
             movimentacoaFinal = movimentacaoFinalRepostory.save(movimentacoaFinal);
         }
         return movimentacoaFinal;
+    }
+ public List<ContaResumoDto> listarContas() {
+        return vinculosRepository.findAll().stream().map(vinculo -> {
+              BasConta base = contasBaseRepository.findById(vinculo.getConta().getId()).orElse(null);
+
+
+
+
+            return new ContaResumoDto(vinculo.getId(), vinculo.getBanco().getId(), base == null ? null : base.getIcTipo(),
+                    base == null ? null : base.getDsConta(), vinculo.getVlSaldoAtual(), vinculo.getIcSituacao(),
+                    null, 
+                    DateUtils.getUltimoDiaDoMes(vinculo.getDtFechamento().getDsMesAno()), 
+                    DateUtils.getPrimeiroDiaDoMes(vinculo.getDtAbertura().getDsMesAno()));
+        }).toList();
+    }
+
+    public ContaResumoDto buscarConta(String id) {
+        return listarContas().stream().filter(conta -> id.equals(conta.id()))
+                .findFirst().orElse(null);
     }
 }

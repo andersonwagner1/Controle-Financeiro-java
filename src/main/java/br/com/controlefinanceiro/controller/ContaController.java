@@ -1,16 +1,21 @@
 package br.com.controlefinanceiro.controller;
 
 import br.com.controlefinanceiro.dto.ContaResumoDto;
-import br.com.controlefinanceiro.service.FinanceiroService;
 import java.util.List;
-import org.springframework.web.bind.annotation.*;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import  br.com.controlefinanceiro.service.LancamentoService;
 
 @RestController
 @RequestMapping("/api/contas")
 public class ContaController {
-    private final FinanceiroService service;
+    private final LancamentoService service;
 
-    public ContaController(FinanceiroService service) {
+    public ContaController(LancamentoService service) {
         this.service = service;
     }
 

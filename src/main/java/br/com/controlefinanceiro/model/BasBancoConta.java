@@ -3,7 +3,6 @@ package br.com.controlefinanceiro.model;
 import java.math.BigDecimal;
 
 import br.com.controlefinanceiro.model.emurador.EnumSimNao;
-import br.com.controlefinanceiro.model.emurador.EnumTipoMovimentacao;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -36,21 +35,13 @@ public class BasBancoConta {
 	
 	@Enumerated (EnumType.STRING)
 	EnumSimNao icSituacao;
-
-
 	String icTipoConta;
-	
 	@ManyToOne
     @JoinColumn(name = "ABERTURA_ID")
 	BasCompetencia dtAbertura;
 	@ManyToOne
     @JoinColumn(name = "FECHAMENTO_ID")
 	BasCompetencia dtFechamento;
-
-	//novo campo
 	BigDecimal vlSaldoAtual;
 
-	
-	
-	
 }
