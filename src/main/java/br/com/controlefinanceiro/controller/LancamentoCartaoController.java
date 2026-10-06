@@ -2,6 +2,7 @@ package br.com.controlefinanceiro.controller;
 
 import br.com.controlefinanceiro.dto.LancamentoCartaoDto;
 import br.com.controlefinanceiro.service.LancamentoCartaoService;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +17,15 @@ public class LancamentoCartaoController {
     }
 
     @GetMapping
-    public List<LancamentoCartaoDto> listar(@RequestParam(required = false) String contaId) {
-        return service.listar(contaId);
+    public List<LancamentoCartaoDto> listar(@RequestParam(required = false) String contaId,
+            @RequestParam(required = false) LocalDate dataInicio,
+            @RequestParam(required = false) LocalDate dataFim) {
+        return service.listar(contaId).stream()
+            .filter(lancamento -> dataInicio == null && dataFim == null
+                || lancamento.data() != null
+                    && (dataInicio == null || !lancamento.data().isBefore(dataInicio))
+                    && (dataFim == null || !lancamento.data().isAfter(dataFim)))
+                .toList();
     }
 
     @GetMapping("/{id}")

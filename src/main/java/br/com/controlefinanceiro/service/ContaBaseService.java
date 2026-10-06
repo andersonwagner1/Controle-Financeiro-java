@@ -4,6 +4,8 @@ import br.com.controlefinanceiro.dto.ContaBaseDto;
 import br.com.controlefinanceiro.model.BasConta;
 
 import br.com.controlefinanceiro.repository.ContaBaseRepository;
+
+import java.beans.Transient;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -15,18 +17,19 @@ public class ContaBaseService {
         this.repository = repository;
     }
 
+    @Transient 
     public List<ContaBaseDto> listar() {
         return repository.findAll().stream().map(this::toDto).toList();
     }
-
+@Transient 
     public ContaBaseDto buscar(Long id) {
         return toDto(repository.findById(id).orElseThrow());
     }
-
+@Transient 
     public ContaBaseDto criar(ContaBaseDto dto) {
         return salvar(dto);
     }
-
+@Transient 
     public ContaBaseDto atualizar(Long id, ContaBaseDto dto) {
         return salvar(new ContaBaseDto(id, dto.descricao(), dto.tipo()));
     }

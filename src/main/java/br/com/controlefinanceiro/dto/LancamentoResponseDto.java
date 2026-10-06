@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 
 
 import br.com.controlefinanceiro.model.emurador.EnumTipoMovimentacao;
+import br.com.controlefinanceiro.model.emurador.EnumRelatorio;
 import lombok.Builder;
 
 @Builder
@@ -16,6 +17,7 @@ public record LancamentoResponseDto(
         Long transferenciaId,
         String data,
         EnumTipoMovimentacao tipo,
+        EnumRelatorio icRelatorio,
         String conta,
         String banco,
         String tipoMovimentacao,

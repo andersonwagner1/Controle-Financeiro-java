@@ -12,6 +12,7 @@ import br.com.controlefinanceiro.model.BasMovimentacao;
 import br.com.controlefinanceiro.model.BasMovimentacaoFinal;
 import br.com.controlefinanceiro.model.BasTipoMovimentacao;
 import br.com.controlefinanceiro.model.emurador.EnumSimNao;
+import br.com.controlefinanceiro.model.emurador.EnumRelatorio;
 import br.com.controlefinanceiro.model.emurador.EnumTipoMovimentacao;
 import br.com.controlefinanceiro.model.util.DateUtils;
 import br.com.controlefinanceiro.repository.BancoContaRepository;
@@ -22,6 +23,7 @@ import br.com.controlefinanceiro.repository.ContaBaseRepository;
 import br.com.controlefinanceiro.repository.InvestimentoRepository;
 import br.com.controlefinanceiro.repository.LancamentoRepository;
 import br.com.controlefinanceiro.repository.TipoMovimentacaoRepository;
+import jakarta.persistence.Transient;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
@@ -77,6 +79,7 @@ public class LancamentoService {
      * @param dataFinal
      * @return
      */
+    @Transactional 
     public List<LancamentoResponseDto> listar(Long contaId, Date dataInicial, Date dataFinal) {
         List<BasMovimentacao> resultado = null;
         if(contaId == null){
@@ -199,6 +202,7 @@ public class LancamentoService {
             .transferenciaId(investimentoId)
             .data(DateUtils.dateToString(e.getDtMovimentacao()))
             .tipo(e.getTipoMovimentacao().getIcTipoMovimentacao())
+            .icRelatorio(e.getTipoMovimentacao().getIcRelatorio())
             .conta(bancoConta.getConta().getDsConta())
             .banco(bancoConta.getBanco().getDsBanco())
             .tipoMovimentacao(e.getTipoMovimentacao().getDsTipoMovimentacao())
@@ -230,6 +234,8 @@ public class LancamentoService {
         .build();
         return dto;
     }
+
+    @Transient
         public SaldoResponseDto consultarDetalhesDosSaldos(Long contaId, Integer[] data) {           
             BasCompetencia comeptencia = competenciasRepository.consultaPorMesAno(data[1], data[2]);
             
@@ -285,6 +291,7 @@ public class LancamentoService {
      * @param basBancoConta
      * @param basCompetencia
      */
+    @Transient
      public void atualizarSaldoMovimentacaoFinal(BasBancoConta basBancoConta, BasCompetencia basCompetencia) {
 
         //Criar ou consultar a movimentacao Final
@@ -297,7 +304,7 @@ public class LancamentoService {
         atualizarMovimentaocaFinalAtualizarVinculo(basBancoConta, movimentacaoFinal, movimentacaoResultaodFinal);
     }
 
-
+@Transient
     public void atualizarSaldoMovimentacaoFinal(Long basBancoConta, String data) {
          BasBancoConta bancoConta = vinculosRepository.findById(basBancoConta).get();
         Integer[] mesDiaAno = DateUtils.getDiaMesAno(data);
@@ -376,21 +383,27 @@ public class LancamentoService {
         }
         return movimentacoaFinal;
     }
- public List<ContaResumoDto> listarContas() {
-        return vinculosRepository.findAll().stream().map(vinculo -> {
-              BasConta base = contasBaseRepository.findById(vinculo.getConta().getId()).orElse(null);
 
+    @Transient
+public List<ContaResumoDto> listarContas() {
+    return vinculosRepository.findAll().stream().map(vinculo -> {
+        BasConta base = contasBaseRepository.findById(vinculo.getConta().getId()).orElse(null);
 
+        ContaResumoDto c = ContaResumoDto.builder()
+            .id(vinculo.getId())
+            .descricao(base != null ? base.getDsConta() : null) // Ajuste para mapear a descrição se disponível no base
+            .bancoId(vinculo.getBanco().getId())
+            .tipo(base == null ? null : base.getIcTipo())
+            .saldo(vinculo.getVlSaldoAtual())
+            .ativa(vinculo.getIcSituacao())
+            .vencimento(DateUtils.getUltimoDiaDoMes(vinculo.getDtFechamento() == null ? null : vinculo.getDtFechamento().getDsMesAno()))
+            .dataAbertura(DateUtils.getPrimeiroDiaDoMes(vinculo.getDtAbertura().getDsMesAno()))
+            .build();
 
-
-            return new ContaResumoDto(vinculo.getId(), vinculo.getBanco().getId(), base == null ? null : base.getIcTipo(),
-                    base == null ? null : base.getDsConta(), vinculo.getVlSaldoAtual(), vinculo.getIcSituacao(),
-                    null, 
-                    DateUtils.getUltimoDiaDoMes(vinculo.getDtFechamento().getDsMesAno()), 
-                    DateUtils.getPrimeiroDiaDoMes(vinculo.getDtAbertura().getDsMesAno()));
-        }).toList();
-    }
-
+        return c; // Retorno do objeto mapeado dentro da lambda
+    }).toList();
+}
+@Transient
     public ContaResumoDto buscarConta(String id) {
         return listarContas().stream().filter(conta -> id.equals(conta.id()))
                 .findFirst().orElse(null);

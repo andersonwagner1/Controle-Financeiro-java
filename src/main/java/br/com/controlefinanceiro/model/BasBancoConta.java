@@ -1,47 +1,53 @@
 package br.com.controlefinanceiro.model;
 
+import lombok.Getter;
+import lombok.Setter;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 import br.com.controlefinanceiro.model.emurador.EnumSimNao;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+import br.com.controlefinanceiro.model.emurador.EnumTipoMovimentacao;
 
 @Getter 
-@Setter 
+@Setter
 @Entity
-@Table(name = "BAS_BANCO_CONTA")
+@Table(name = "bas_banco_conta")
 public class BasBancoConta {
-	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idBancoConta")
-	@SequenceGenerator(name="idBancoConta", sequenceName="seq_BasBancoConta", initialValue = 1, allocationSize = 1)
-	Long id;
-	@ManyToOne
-    @JoinColumn(name = "BANCO_ID")
-	BasBanco banco;
-	
-	@ManyToOne
-    @JoinColumn(name = "CONTA_ID")
-	BasConta conta;
-	
-	@Enumerated (EnumType.STRING)
-	EnumSimNao icSituacao;
-	String icTipoConta;
-	@ManyToOne
-    @JoinColumn(name = "ABERTURA_ID")
-	BasCompetencia dtAbertura;
-	@ManyToOne
-    @JoinColumn(name = "FECHAMENTO_ID")
-	BasCompetencia dtFechamento;
-	BigDecimal vlSaldoAtual;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_id_banco_conta")
+    @SequenceGenerator(
+        name = "seq_id_banco_conta", 
+        sequenceName = "seq_bas_banco_conta", 
+        initialValue = 1, 
+        allocationSize = 1
+    )
+    @Column(name = "id")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "banco_id")
+    private BasBanco banco;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conta_id")
+    private BasConta conta;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ic_situacao")
+    private EnumSimNao icSituacao;
+
+    @Column(name = "ic_tipo_conta")
+    private String icTipoConta;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "abertura_id")
+    private BasCompetencia dtAbertura;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fechamento_id")
+    private BasCompetencia dtFechamento;
+    
+    @Column(name = "vl_saldo_atual")
+    private BigDecimal vlSaldoAtual;
 }

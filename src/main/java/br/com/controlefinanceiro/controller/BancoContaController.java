@@ -35,8 +35,8 @@ public class BancoContaController {
         return service.atualizar(id, dto);
     }
 
-    @PatchMapping("/{id}/saldo")
+  /*  @PatchMapping("/{id}/saldo")
     public VinculoDto atualizarSaldo(@PathVariable Long id, @RequestParam BigDecimal saldo) {
         return service.atualizarSaldo(id, saldo);
-    }
+    }*/
 }

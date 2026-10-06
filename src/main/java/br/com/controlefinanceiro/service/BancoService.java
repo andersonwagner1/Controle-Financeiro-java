@@ -3,6 +3,8 @@ package br.com.controlefinanceiro.service;
 import br.com.controlefinanceiro.dto.BancoDto;
 import br.com.controlefinanceiro.model.BasBanco;
 import br.com.controlefinanceiro.repository.BancoRepository;
+import jakarta.persistence.Transient;
+
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -13,24 +15,24 @@ public class BancoService {
     public BancoService(BancoRepository repository) {
         this.repository = repository;
     }
-
+@Transient 
     public List<BancoDto> listar() {
         List<BancoDto> lista = repository.findAll().stream().map(this::toDto).toList();
         return lista;
     }
-
+@Transient 
     public BancoDto buscar(Long id) {
         return toDto(repository.findById(id).orElseThrow());
     }
-
+@Transient 
     public BancoDto criar(BancoDto dto) {
         return salvar(dto);
     }
-
+@Transient 
     public BancoDto atualizar(Long id, BancoDto dto) {
         return salvar(new BancoDto(id, dto.nome(), dto.logo(), dto.cor(), dto.corSecundaria()));
     }
-
+@Transient 
     private BancoDto salvar(BancoDto dto) {
         BasBanco banco = new BasBanco();
         banco.setId(dto.id());

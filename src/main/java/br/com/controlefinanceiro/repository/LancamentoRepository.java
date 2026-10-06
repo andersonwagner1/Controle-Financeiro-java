@@ -33,7 +33,7 @@ public interface LancamentoRepository extends JpaRepository<BasMovimentacao, Lon
             @Param("dataInicial") Date dataInicial,
             @Param("dataFinal") Date dataFinal);
 
-    @Query("select l from BasMovimentacao l "
+    @Query("select l from BasMovimentacao l join fetch l.bancoConta b "
             + " WHERE l.dtMovimentacao between :dataInicial AND :dataFinal "
 
             + " order by l.dtMovimentacao desc")

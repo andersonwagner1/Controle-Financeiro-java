@@ -12,6 +12,8 @@ import br.com.controlefinanceiro.model.util.DateUtils;
 import br.com.controlefinanceiro.repository.BancoRepository;
 import br.com.controlefinanceiro.repository.BasCompetenciaRespository;
 import br.com.controlefinanceiro.repository.ContaBaseRepository;
+import jakarta.persistence.Transient;
+import jakarta.transaction.Transactional;
 import br.com.controlefinanceiro.repository.BancoContaRepository;
 import java.math.BigDecimal;
 
@@ -35,44 +37,39 @@ public class BancoContaService {
         this.contaBaseRepository = contaBaseRepository;
         this.competenciaRespository = competenciaRespository;
     }
-
+@Transactional 
     public List<VinculoDto> listar() {
         return repository.findAll().stream().map(this::toDto).toList();
     }
-
+@Transactional 
     public List<VinculoDto> listarAtivos() {
         return repository.findAll().stream()
               //  .filter(Vinculo::isAtiva)
                 .map(this::toDto)
                 .toList();
     }
-
+@Transactional 
     public List<ContaVinculadaDto> listarContasVinculadas() {
         return repository.findAll().stream()
              //   .filter(Vinculo::isAtiva)
                 .map(this::toContaVinculadaDto)
                 .toList();
     }
-
+@Transactional 
     public VinculoDto buscar(Long id) {
         return toDto(repository.findById(id).orElseThrow());
     }
-
+@Transactional
     public VinculoDto criar(VinculoDto dto) {
         return salvar(dto);
     }
-
+@Transactional 
     public VinculoDto atualizar(Long id, VinculoDto dto) {
         return salvar(new VinculoDto(id, dto.bancoId(), dto.contaBaseId(), dto.saldo(), dto.dataInicio(), dto.dataFim(),
                 dto.rentabilidade(), dto.vencimento(), dto.ativa()));
     }
 
-    public VinculoDto atualizarSaldo(Long id, BigDecimal saldo) {
-        BasBancoConta vinculo = repository.findById(id).orElseThrow();
-        vinculo.setVlSaldoAtual(saldo);
-        return toDto(repository.save(vinculo));
-    }
-
+@Transactional
     private VinculoDto salvar(VinculoDto dto) {
         Integer[] dataInicial = DateUtils.getDiaMesEAno(dto.dataInicio());
         Integer[] dataFinal = DateUtils.getDiaMesEAno(dto.dataInicio());

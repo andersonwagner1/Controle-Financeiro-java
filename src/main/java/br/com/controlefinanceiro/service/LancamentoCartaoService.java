@@ -5,6 +5,7 @@ import br.com.controlefinanceiro.model.CartaoCredito;
 import br.com.controlefinanceiro.model.LancamentoCartao;
 import br.com.controlefinanceiro.repository.CartaoCreditoRepository;
 import br.com.controlefinanceiro.repository.LancamentoCartaoRepository;
+import jakarta.persistence.Transient;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,13 +25,13 @@ public class LancamentoCartaoService {
         this.lancamentos = lancamentos;
         this.cartoes = cartoes;
     }
-
+@Transient
     public List<LancamentoCartaoDto> listar(String contaId) {
         List<LancamentoCartao> resultado = contaId == null ? lancamentos.findAll()
                 : lancamentos.findByContaIdOrderByDataDesc(contaId);
         return resultado.stream().map(this::toDto).toList();
     }
-
+@Transient
     public LancamentoCartaoDto buscar(String id) {
         return toDto(buscarEntidade(id));
     }

@@ -19,9 +19,9 @@ public class CartaoCredito {
     @Id private String id = UUID.randomUUID().toString();
     private String nome;
     /** Identificador do vínculo (banco/conta) ao qual o cartão pertence. */
-    @ManyToOne
-    @JoinColumn(name = "BANCO_CONTA_ID")
-    private BasBancoConta bancoConta;
+
+    
+    private Long bancoContaId;
     private BigDecimal limite;
     private Integer diaFechamento;
     private Integer diaVencimento;

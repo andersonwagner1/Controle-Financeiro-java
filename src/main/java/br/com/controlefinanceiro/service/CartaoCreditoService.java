@@ -4,6 +4,7 @@ import br.com.controlefinanceiro.dto.CartaoCreditoDto;
 import br.com.controlefinanceiro.model.CartaoCredito;
 import br.com.controlefinanceiro.repository.CartaoCreditoRepository;
 import br.com.controlefinanceiro.repository.LancamentoCartaoRepository;
+import jakarta.persistence.Transient;
 import br.com.controlefinanceiro.repository.BancoContaRepository;
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,19 +26,19 @@ public class CartaoCreditoService {
         this.vinculos = vinculos;
         this.lancamentos = lancamentos;
     }
-
+@Transient
     public List<CartaoCreditoDto> listar() {
         return cartoes.findAll().stream().map(this::toDto).toList();
     }
-
+@Transient
     public CartaoCreditoDto buscar(String id) {
         return toDto(buscarEntidade(id));
     }
-
+@Transient
     public CartaoCreditoDto criar(CartaoCreditoDto dto) {
         return salvar(dto, null);
     }
-
+@Transient
     public CartaoCreditoDto atualizar(String id, CartaoCreditoDto dto) {
         buscarEntidade(id);
         return salvar(dto, id);
@@ -50,13 +51,13 @@ public class CartaoCreditoService {
         CartaoCredito cartao = new CartaoCredito();
         cartao.setId(id == null ? (dto.id() == null ? UUID.randomUUID().toString() : dto.id().toString()) : id);
         cartao.setNome(dto.nome());
-        cartao.setBancoConta( vinculos.findById(dto.vinculoId()).get());
+        cartao.setBancoContaId(dto.vinculoId());
         cartao.setLimite(dto.limite());
         cartao.setDiaFechamento(dto.diaFechamento());
         cartao.setDiaVencimento(dto.diaVencimento());
         return toDto(cartoes.save(cartao));
     }
-
+@Transient
     private CartaoCredito buscarEntidade(String id) {
         return cartoes.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cartão de crédito não encontrado"));
@@ -67,7 +68,7 @@ public class CartaoCreditoService {
         BigDecimal limiteDisponivel = cartao.getLimite().subtract(utilizado == null ? BigDecimal.ZERO : utilizado);
         return new CartaoCreditoDto(cartao.getId(), 
                 cartao.getNome(), 
-                cartao.getBancoConta().getId(), 
+                cartao.getBancoContaId(), 
                 cartao.getLimite(),
                 cartao.getDiaFechamento(), 
                 cartao.getDiaVencimento(), 

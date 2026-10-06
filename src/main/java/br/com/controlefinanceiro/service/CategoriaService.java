@@ -5,6 +5,8 @@ import br.com.controlefinanceiro.model.BasTipoMovimentacao;
 import br.com.controlefinanceiro.model.emurador.EnumSimNao;
 
 import br.com.controlefinanceiro.repository.TipoMovimentacaoRepository;
+
+import java.beans.Transient;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -15,29 +17,30 @@ public class CategoriaService {
     public CategoriaService(TipoMovimentacaoRepository repository) {
         this.repository = repository;
     }
-
+@Transient 
     public List<TipoMovimentacaoDto> listar() {
         return repository.findAll().stream().map(this::toDto).toList();
     }
-
+@Transient 
     public TipoMovimentacaoDto buscar(Long id) {
         return toDto(repository.findById(id).orElseThrow());
     }
-
+@Transient 
     public TipoMovimentacaoDto criar(TipoMovimentacaoDto dto) {
         return salvar(dto);
     }
-
+@Transient 
     public TipoMovimentacaoDto atualizar(Long id, TipoMovimentacaoDto dto) {
         return salvar(new TipoMovimentacaoDto(id, dto.nome(), dto.tipo(), dto.ativo()));
     }
-
+@Transient 
     public TipoMovimentacaoDto atualizarStatus(Long id, String ativo) {
         BasTipoMovimentacao categoria = repository.findById(id).orElseThrow();
         categoria.setIcSituacao(EnumSimNao.valueOf(ativo));
         return toDto(repository.save(categoria));
     }
 
+    @Transient 
     public void excluir(Long id) {
         repository.deleteById(id);
     }

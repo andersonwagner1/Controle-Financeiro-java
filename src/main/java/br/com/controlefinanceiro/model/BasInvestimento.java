@@ -3,6 +3,8 @@ package br.com.controlefinanceiro.model;
 import br.com.controlefinanceiro.model.emurador.EnumSimNao;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,6 +31,7 @@ public class BasInvestimento {
 	@Column(name = "DS_INVESTIMENTO")
 	String dsInvestimento;
 
+	@Enumerated (EnumType.STRING)
 	@Column(name = "IC_SITUACAO")
 	EnumSimNao icSituacao;
 	
