@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 import br.com.controlefinanceiro.model.emurador.EnumSimNao;
-import br.com.controlefinanceiro.model.emurador.EnumTipoMovimentacao;
 
 @Getter 
 @Setter

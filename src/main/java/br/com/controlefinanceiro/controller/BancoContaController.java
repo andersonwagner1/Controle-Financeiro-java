@@ -2,7 +2,6 @@ package br.com.controlefinanceiro.controller;
 
 import br.com.controlefinanceiro.dto.VinculoDto;
 import br.com.controlefinanceiro.service.BancoContaService;
-import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.web.bind.annotation.*;
 

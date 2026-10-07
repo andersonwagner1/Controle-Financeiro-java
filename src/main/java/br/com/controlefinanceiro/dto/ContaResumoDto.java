@@ -10,5 +10,4 @@ import lombok.Builder;
 public record ContaResumoDto(Long id, Long bancoId, String tipo, String descricao,
                              BigDecimal saldo, EnumSimNao ativa, BigDecimal rentabilidade,
                              LocalDate vencimento, LocalDate dataAbertura) {
-        //TODO Auto-generated constructor stub
     }

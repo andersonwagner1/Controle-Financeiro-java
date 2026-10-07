@@ -23,7 +23,7 @@ public class CartaoCreditoController {
     }
 
     @GetMapping("/{id}")
-    public CartaoCreditoDto buscar(@PathVariable String id) {
+    public CartaoCreditoDto buscar(@PathVariable Long id) {
         return service.buscar(id);
     }
 
@@ -34,7 +34,7 @@ public class CartaoCreditoController {
     }
 
     @PutMapping("/{id}")
-    public CartaoCreditoDto atualizar(@PathVariable String id, @Valid @RequestBody CartaoCreditoDto dto) {
+    public CartaoCreditoDto atualizar(@PathVariable Long id, @Valid @RequestBody CartaoCreditoDto dto) {
         return service.atualizar(id, dto);
     }
 }

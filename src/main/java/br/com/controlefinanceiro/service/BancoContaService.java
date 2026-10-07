@@ -12,7 +12,6 @@ import br.com.controlefinanceiro.model.util.DateUtils;
 import br.com.controlefinanceiro.repository.BancoRepository;
 import br.com.controlefinanceiro.repository.BasCompetenciaRespository;
 import br.com.controlefinanceiro.repository.ContaBaseRepository;
-import jakarta.persistence.Transient;
 import jakarta.transaction.Transactional;
 import br.com.controlefinanceiro.repository.BancoContaRepository;
 import java.math.BigDecimal;

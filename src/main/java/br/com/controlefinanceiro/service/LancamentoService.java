@@ -12,7 +12,6 @@ import br.com.controlefinanceiro.model.BasMovimentacao;
 import br.com.controlefinanceiro.model.BasMovimentacaoFinal;
 import br.com.controlefinanceiro.model.BasTipoMovimentacao;
 import br.com.controlefinanceiro.model.emurador.EnumSimNao;
-import br.com.controlefinanceiro.model.emurador.EnumRelatorio;
 import br.com.controlefinanceiro.model.emurador.EnumTipoMovimentacao;
 import br.com.controlefinanceiro.model.util.DateUtils;
 import br.com.controlefinanceiro.repository.BancoContaRepository;
@@ -385,8 +384,8 @@ public class LancamentoService {
     }
 
     @Transient
-public List<ContaResumoDto> listarContas() {
-    return vinculosRepository.findAll().stream().map(vinculo -> {
+    public List<ContaResumoDto> listarContas() {
+        return vinculosRepository.findAll().stream().map(vinculo -> {
         BasConta base = contasBaseRepository.findById(vinculo.getConta().getId()).orElse(null);
 
         ContaResumoDto c = ContaResumoDto.builder()

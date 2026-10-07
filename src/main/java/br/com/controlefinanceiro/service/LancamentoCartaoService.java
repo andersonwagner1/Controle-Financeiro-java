@@ -1,15 +1,19 @@
 package br.com.controlefinanceiro.service;
 
-import br.com.controlefinanceiro.dto.LancamentoCartaoDto;
+
+import br.com.controlefinanceiro.dto.LancamentoCartaoRequestDto;
+import br.com.controlefinanceiro.dto.LancamentoCartaoResponseDto;
+import br.com.controlefinanceiro.model.BasLancamentoCredito;
+import br.com.controlefinanceiro.model.BasTipoMovimentacao;
 import br.com.controlefinanceiro.model.CartaoCredito;
-import br.com.controlefinanceiro.model.LancamentoCartao;
+import br.com.controlefinanceiro.model.util.DateUtils;
 import br.com.controlefinanceiro.repository.CartaoCreditoRepository;
 import br.com.controlefinanceiro.repository.LancamentoCartaoRepository;
-import jakarta.persistence.Transient;
+import br.com.controlefinanceiro.repository.TipoMovimentacaoRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,99 +23,115 @@ import org.springframework.web.server.ResponseStatusException;
 public class LancamentoCartaoService {
     private final LancamentoCartaoRepository lancamentos;
     private final CartaoCreditoRepository cartoes;
+    private final TipoMovimentacaoRepository tipoMovimentacaoRepository;
 
     public LancamentoCartaoService(LancamentoCartaoRepository lancamentos,
+        TipoMovimentacaoRepository tipoMovimentacaoRepository,
             CartaoCreditoRepository cartoes) {
         this.lancamentos = lancamentos;
         this.cartoes = cartoes;
+        this.tipoMovimentacaoRepository = tipoMovimentacaoRepository;
     }
-@Transient
-    public List<LancamentoCartaoDto> listar(String contaId) {
-        List<LancamentoCartao> resultado = contaId == null ? lancamentos.findAll()
-                : lancamentos.findByContaIdOrderByDataDesc(contaId);
+   
+   
+    @Transactional(readOnly = true)
+    public List<LancamentoCartaoResponseDto> listar(LocalDate dataInicio, LocalDate dataFim, Long contaId) {
+        
+        List<BasLancamentoCredito> resultado = null;
+        if(contaId == null || contaId == 0) {
+            resultado = lancamentos.localizarLancamentoPorCartao(DateUtils.toDate(dataInicio), DateUtils.toDate(dataFim));
+        }else{
+            resultado = lancamentos.localizarLancamentoPorCartao(contaId, DateUtils.toDate(dataInicio), DateUtils.toDate(dataFim));            
+        }
+
         return resultado.stream().map(this::toDto).toList();
     }
-@Transient
-    public LancamentoCartaoDto buscar(String id) {
+
+
+
+@Transactional(readOnly = true)
+    public LancamentoCartaoResponseDto buscar(Long id) {
         return toDto(buscarEntidade(id));
     }
 
     @Transactional
-    public LancamentoCartaoDto criar(LancamentoCartaoDto dto) {
+    public LancamentoCartaoResponseDto criar(LancamentoCartaoRequestDto dto) {
         validar(dto, null);
         return toDto(lancamentos.save(toEntity(dto)));
     }
 
     @Transactional
-    public LancamentoCartaoDto atualizar(String id, LancamentoCartaoDto dto) {
+    public LancamentoCartaoResponseDto atualizar(Long id, LancamentoCartaoRequestDto dto) {
         buscarEntidade(id);
         validar(dto, id);
-        LancamentoCartao lancamento = toEntity(dto);
+        BasLancamentoCredito lancamento = toEntity(dto);
         lancamento.setId(id);
         return toDto(lancamentos.save(lancamento));
     }
 
     @Transactional
-    public void excluir(String id) {
+    public void excluir(Long id) {
         lancamentos.delete(buscarEntidade(id));
     }
 
-    private void validar(LancamentoCartaoDto dto, String lancamentoIgnoradoId) {
-        if (dto.vinculoId() == null || dto.vinculoId().isBlank())
-            throw erro("O vínculo é obrigatório");      
-        CartaoCredito cartao = cartoes.findById(dto.vinculoId())
-                .orElseThrow(() -> naoEncontrado("Cartão de crédito"));
-       // if (!vinculos.existsById(dto.vinculoId()))
-        //    throw naoEncontrado("Vínculo");
-        //if (!cartao.getVinculoId().equals(dto.vinculoId()))
-        //    throw erro("O cartão de crédito não pertence ao vínculo informado");
-        if (!"debito".equalsIgnoreCase(dto.tipo()))
-            throw erro("Lançamentos em cartão de crédito devem ser do tipo débito");
-        //if (dto.valor() == null || dto.valor().signum() <= 0)
-        //    throw erro("O valor da compra no cartão deve ser positivo");
+    private void validar(LancamentoCartaoRequestDto dto, Long lancamentoIgnoradoId) {
+        if (dto.cartaoCreditoId() == null || dto.cartaoCreditoId() == 0 ) throw erro("O cartão de crédito é obrigatório");      
+        
+        CartaoCredito cartao = cartoes.findById(dto.cartaoCreditoId()).get();
+       
+
 
         BigDecimal utilizado = lancamentos.somarComprasPorCartao(cartao.getId());
         if (lancamentoIgnoradoId != null) {
-            LancamentoCartao anterior = buscarEntidade(lancamentoIgnoradoId);
-            if (cartao.getId().equals(anterior.getCartaoCreditoId()))
-                utilizado = utilizado.subtract(anterior.getValor());
+            BasLancamentoCredito anterior = buscarEntidade(lancamentoIgnoradoId);
+            if (cartao.getId().equals(anterior.getCartaoCredito().getId()))
+                utilizado = utilizado.subtract(anterior.getVlCompra());
         }
         if (utilizado.add(dto.valor()).compareTo(cartao.getLimite()) > 0)
             throw erro("Limite disponível do cartão de crédito insuficiente");
     }
 
-    private LancamentoCartao buscarEntidade(String id) {
-        return lancamentos.findById(id)
-                .orElseThrow(() -> naoEncontrado("Lançamento de cartão"));
+    private BasLancamentoCredito buscarEntidade(Long id) {
+        return lancamentos.findById(id).get();                
     }
 
-    private LancamentoCartao toEntity(LancamentoCartaoDto dto) {
-        LancamentoCartao lancamento = new LancamentoCartao();
-        lancamento.setId(dto.id() == null ? UUID.randomUUID().toString() : dto.id());
+    private BasLancamentoCredito toEntity(LancamentoCartaoRequestDto dto) {
+        CartaoCredito cartao = cartoes.findById(dto.cartaoCreditoId()).get();
+        BasTipoMovimentacao tipoMovimentacao = tipoMovimentacaoRepository.findById(dto.tipoMovimentacaoId()).get();
         
-        lancamento.setCartaoCreditoId(dto.vinculoId());
-        lancamento.setTipo(dto.tipo());
-        lancamento.setDescricao(dto.descricao());
-        lancamento.setCategoria(dto.categoria());
-        lancamento.setValor(dto.valor());
-        lancamento.setData(dto.data());
-        lancamento.setObservacao(dto.observacao());
+
+        BasLancamentoCredito lancamento = new BasLancamentoCredito();
+        lancamento.setId(dto.id());
+        lancamento.setCartaoCredito(cartao);
+        lancamento.setDsObservacao(dto.descricao());        
+        lancamento.setTipoMovimentacao(tipoMovimentacao);
+        lancamento.setVlCompra(dto.valor());
+        lancamento.setDtMovimentacao(dto.data());
+        lancamento.setNrParcelas(dto.parcelas());
+       
         
         return lancamento;
     }
 
-    private LancamentoCartaoDto toDto(LancamentoCartao lancamento) {
-        return new LancamentoCartaoDto(lancamento.getId(),
-                lancamento.getCartaoCreditoId(), lancamento.getTipo(), lancamento.getDescricao(),
-                lancamento.getCategoria(), lancamento.getValor(), lancamento.getData(),
-                lancamento.getObservacao());
+    private LancamentoCartaoResponseDto toDto(BasLancamentoCredito lancamento) {
+        BasTipoMovimentacao tipoMovimentacao = tipoMovimentacaoRepository.findById(lancamento.getTipoMovimentacao().getId()).get();
+        LancamentoCartaoResponseDto dto = LancamentoCartaoResponseDto.builder()
+                .id(lancamento.getId())
+                .cartaoCreditoId(lancamento.getCartaoCredito().getId())
+                .tipoMovimentacaoId(tipoMovimentacao.getId())
+                .descricao(lancamento.getDsObservacao())                
+                .tipoMovimentacao(lancamento.getTipoMovimentacao().getDsTipoMovimentacao())
+                .valor(lancamento.getVlCompra())
+                .data(DateUtils.toLocalDate(lancamento.getDtMovimentacao()))
+                .cartaoCredito(lancamento.getCartaoCredito().getNome())
+                .tipo(lancamento.getTipoMovimentacao().getIcTipoMovimentacao())
+                .build();
+        return dto;
     }
 
-    private ResponseStatusException naoEncontrado(String nome) {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, nome + " não encontrado");
-    }
 
     private ResponseStatusException erro(String mensagem) {
         return new ResponseStatusException(HttpStatus.BAD_REQUEST, mensagem);
     }
+
 }
